@@ -54,6 +54,8 @@ dependencies {
 	modImplementation "carpet:fabric-carpet:1.21.4-1.4.161+v241203"
 	modImplementation files('libs/malilib-fabric-1.21.4-0.23.5.jar')
 	modImplementation files('libs/litematica-fabric-1.21.4-0.21.5.jar')
+
+	implementation 'com.google.code.gson:gson:2.10.1'
 }
 
 processResources {

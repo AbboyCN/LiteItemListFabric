@@ -1,23 +1,32 @@
 package me.abboycn;
 
+import me.abboycn.data.DataPersistenceManager;
+import me.abboycn.event.PlayerLogoutEventListener;
+import me.abboycn.event.ServerStartEventListener;
+import me.abboycn.event.ServerStopEventListener;
+import me.abboycn.task.TaskManager;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static me.abboycn.command.CommandRegister.*;
+
 public class LiteItemListFabric implements ModInitializer {
 	public static final String MOD_ID = "liteitemlist-fabric";
-
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+	public static TaskManager taskManager = new TaskManager();
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+		DataPersistenceManager.initDirectory();
+
+		registerCommands();
+
+		ServerStopEventListener.register();
+		ServerStartEventListener.register();
+		PlayerLogoutEventListener.register();
 
 		LOGGER.info("Successfully initialized LiteItemListFabric");
 	}
