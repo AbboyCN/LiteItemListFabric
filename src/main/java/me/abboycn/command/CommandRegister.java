@@ -9,6 +9,8 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 
+import static me.abboycn.executor.CMDTaskNew.CMDTaskNewExecutor;
+
 public class CommandRegister {
     public static void registerCommands() {
         CommandRegistrationCallback.EVENT.register((d, r, e) -> registerMain(d,r));
@@ -19,7 +21,10 @@ public class CommandRegister {
                 .then(CommandManager.literal("task")
                         .then(CommandManager.literal("new")
                                 .then(CommandManager.argument("project", StringArgumentType.string())
-                                        .executes(CMDTaskNew::CMDTaskNewExecutor)))
+                                        .executes(context -> CMDTaskNewExecutor(context,false))
+                                        .then(CommandManager.argument("file", StringArgumentType.string())
+                                                .suggests((context, builder)->TABLitematicaSuggester.litematicaFileSuggester(builder))
+                                                .executes(context -> CMDTaskNewExecutor(context,true)))))
                         .then(CommandManager.literal("cancel")
                                 .then(CommandManager.argument("project", StringArgumentType.string())
                                         .suggests((context, builder)->TABTaskSuggester.projectSuggester(builder))
@@ -37,6 +42,7 @@ public class CommandRegister {
                         .then(CommandManager.literal("switch")
                                 .then(CommandManager.argument("project", StringArgumentType.string())
                                         .executes(CMDTaskSwitch::CMDTaskSwitchExecutor))))
+                .then(CommandManager.literal("list"))
                 .then(CommandManager.literal("bot")
                         .then(CommandManager.argument("project", StringArgumentType.string())
                                 .suggests((context, builder)->TABTaskSuggester.projectSuggester(builder))

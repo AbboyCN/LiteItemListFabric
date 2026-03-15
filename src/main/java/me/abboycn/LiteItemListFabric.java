@@ -2,6 +2,7 @@ package me.abboycn;
 
 import me.abboycn.data.DataPersistenceManager;
 import me.abboycn.event.PlayerLogoutEventListener;
+import me.abboycn.event.ServerSaveEventListener;
 import me.abboycn.event.ServerStartEventListener;
 import me.abboycn.event.ServerStopEventListener;
 import me.abboycn.task.TaskManager;
@@ -26,6 +27,7 @@ public class LiteItemListFabric implements ModInitializer {
 
 		ServerStopEventListener.register();
 		ServerStartEventListener.register();
+		ServerSaveEventListener.register();
 		PlayerLogoutEventListener.register();
 
 		LOGGER.info("Successfully initialized LiteItemListFabric");

@@ -3,9 +3,9 @@
 	"id": "liteitemlist-fabric",
 	"version": "${version}",
 	"name": "LiteItemList Fabric",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "LiteItemList fabric mod version.",
 	"authors": [
-		"Me!"
+		"Ab_boy_CN"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -36,6 +36,7 @@
 		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.21.4",
 		"java": ">=21",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"carpet": ">=1.4.161"
 	}
 }

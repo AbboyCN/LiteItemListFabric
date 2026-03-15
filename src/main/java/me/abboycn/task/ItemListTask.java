@@ -20,6 +20,8 @@ public class ItemListTask {
     private Long m_time;
     @SerializedName("botManager")
     private TaskStorageBotManager m_botManager;
+    @SerializedName("itemList")
+    private TaskItemList m_itemList;
 
     public ItemListTask(String name, int id, String creator) {
         m_name = name;
@@ -28,6 +30,7 @@ public class ItemListTask {
         addMember(m_creator);
         m_time = System.currentTimeMillis();
         m_botManager = new TaskStorageBotManager(name);
+        m_itemList = new TaskItemList();
     }
 
     public ItemListTask(String name, int id, ServerPlayerEntity creator) {
@@ -37,6 +40,7 @@ public class ItemListTask {
         addMember(m_creator);
         m_time = System.currentTimeMillis();
         m_botManager = new TaskStorageBotManager(name);
+        m_itemList = new TaskItemList();
     }
 
     public String getName() {
@@ -61,6 +65,10 @@ public class ItemListTask {
 
     public TaskStorageBotManager getStorageBotManager() {
         return this.m_botManager;
+    }
+
+    public TaskItemList getItemList() {
+        return m_itemList;
     }
 
     public void setName(String name) {
@@ -105,6 +113,10 @@ public class ItemListTask {
 
     public void setBotManager(TaskStorageBotManager botManager) {
         this.m_botManager = botManager;
+    }
+
+    public void setItemList(TaskItemList itemList) {
+        m_itemList = itemList;
     }
 
     public String getTaskCommandTag() {
