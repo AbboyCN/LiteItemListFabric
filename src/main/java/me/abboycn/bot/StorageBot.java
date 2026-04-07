@@ -93,7 +93,7 @@ public class StorageBot {
                 , player.getPitch()
                 , player.getEntityWorld().getRegistryKey()
                 , GameMode.SURVIVAL
-                , true);
+                , false);
 
         MinecraftServer server = player.server;
         String fakeName = m_name;

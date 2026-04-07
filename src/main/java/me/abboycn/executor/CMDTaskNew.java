@@ -33,6 +33,7 @@ public class CMDTaskNew {
             File file = Paths.get(strName).toFile();
             try {
                 TaskItemList taskItemList = LitematicaReader.parseLitematicaFile(file);
+                taskItemList.setProject(name);
                 task.setItemList(taskItemList);
             } catch (Exception e) {
                 LiteItemListFabric.LOGGER.error("Exception while reading litematic file: {}",file,e);

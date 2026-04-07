@@ -7,6 +7,7 @@ import me.abboycn.bot.TaskStorageBotManager;
 import me.abboycn.task.ItemListTask;
 import me.abboycn.task.TaskManager;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.server.MinecraftServer;
 
 import java.io.File;
 import java.io.FileReader;
@@ -32,13 +33,13 @@ public class DataPersistenceManager {
         try (FileWriter writer = new FileWriter(TASKS_FILE)) {
             TaskManager taskManager = LiteItemListFabric.taskManager;
             GSON.toJson(taskManager.getTasks(), writer);
-            LiteItemListFabric.LOGGER.info("Successfully saved data of {} tasks.", taskManager.getTasks().size());
+            LiteItemListFabric.LOGGER.info("Successfully saved data for {} task(s).", taskManager.getTasks().size());
         } catch (IOException e) {
             LiteItemListFabric.LOGGER.error("failed to save task data:", e);
         }
     }
 
-    public static void loadTasks() {
+    public static void loadTasks(MinecraftServer server) {
         File file = new File(TASKS_FILE);
         if (!file.exists()) return;
 
@@ -48,12 +49,13 @@ public class DataPersistenceManager {
 
             taskManager.getTasks().clear();
             for (ItemListTask task : tasks) {
+                task.startAutoRefreshStorage(server);
                 taskManager.getTasks().add(task);
                 if (task.getStorageBotManager() == null) {
                     task.setBotManager(new TaskStorageBotManager(task.getName()));
                 }
             }
-            LiteItemListFabric.LOGGER.info("loaded {} tasks from saved data.", tasks.length);
+            LiteItemListFabric.LOGGER.info("loaded {} task(s) from saved data.", tasks.length);
         } catch (IOException e) {
             LiteItemListFabric.LOGGER.error("failed to load task data:", e);
         }

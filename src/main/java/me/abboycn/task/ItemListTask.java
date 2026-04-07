@@ -1,10 +1,17 @@
 package me.abboycn.task;
 
+import me.abboycn.LiteItemListFabric;
 import me.abboycn.bot.TaskStorageBotManager;
+import me.abboycn.data.LitematicaReader;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import com.google.gson.annotations.SerializedName;
 
 public class ItemListTask {
@@ -23,15 +30,8 @@ public class ItemListTask {
     @SerializedName("itemList")
     private TaskItemList m_itemList;
 
-    public ItemListTask(String name, int id, String creator) {
-        m_name = name;
-        m_id = id;
-        m_creator = creator;
-        addMember(m_creator);
-        m_time = System.currentTimeMillis();
-        m_botManager = new TaskStorageBotManager(name);
-        m_itemList = new TaskItemList();
-    }
+    private transient Timer storageRefreshTimer;
+    private static final int REFRESH_INTERVAL = 3000;
 
     public ItemListTask(String name, int id, ServerPlayerEntity creator) {
         m_name = name;
@@ -41,6 +41,7 @@ public class ItemListTask {
         m_time = System.currentTimeMillis();
         m_botManager = new TaskStorageBotManager(name);
         m_itemList = new TaskItemList();
+        startAutoRefreshStorage(creator.server);
     }
 
     public String getName() {
@@ -105,6 +106,26 @@ public class ItemListTask {
 
     public void removeMember(ServerPlayerEntity member) {
         this.m_members.remove(member.getName().getString());
+    }
+
+    public void refreshTaskItemList() {
+        try {
+            this.m_itemList = LitematicaReader.parseLitematicaFile(Paths.get(m_itemList.getFilePath()).toFile());
+        }
+        catch (Exception e) {
+            LiteItemListFabric.LOGGER.error("failed to load litematic file: {}", m_itemList.getFilePath(), e);
+        }
+    }
+
+    public void startAutoRefreshStorage(MinecraftServer server) {
+        if (storageRefreshTimer != null) return;
+        storageRefreshTimer = new Timer(true); // 守护线程，不卡关服
+        storageRefreshTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                 server.execute(() -> m_itemList.calcAvailable(server, m_botManager));
+            }
+        }, 0, REFRESH_INTERVAL); // 0延迟启动，每3000ms=3秒
     }
 
     public void setTime(Long time) {

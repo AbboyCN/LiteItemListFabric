@@ -52,6 +52,10 @@ public class TaskManager {
         return m_tasks.stream().filter(task -> task.getId() == id).findFirst().orElse(null);
     }
 
+    public ItemListTask getTaskByPlayer(ServerPlayerEntity player) {
+        return m_tasks.stream().filter(task -> player.getCommandTags().contains(task.getTaskCommandTag())).findFirst().orElse(null);
+    }
+
     public String getTaskCommandTag(int id) {
         return "in_task_" + id;
     }

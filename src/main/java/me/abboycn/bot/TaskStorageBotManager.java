@@ -43,6 +43,8 @@ public class TaskStorageBotManager {
 
     public Collection<StorageBot> getBots(){return storageBots;}
 
+    public boolean hasBot(){return !storageBots.isEmpty();}
+
     public void summonBot(int id, ServerPlayerEntity player){
         getBot(id).playerSummonFake(player);
     }

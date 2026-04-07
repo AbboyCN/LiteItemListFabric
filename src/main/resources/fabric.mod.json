@@ -13,30 +13,22 @@
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/liteitemlist-fabric/icon.png",
-	"environment": "*",
+	"environment": "server",
 	"entrypoints": {
 		"main": [
 			"me.abboycn.LiteItemListFabric"
-		],
-		"client": [
-			"me.abboycn.LiteItemListFabricClient"
 		],
 		"fabric-datagen": [
 			"me.abboycn.LiteItemListFabricDataGenerator"
 		]
 	},
-	"mixins": [
-		"liteitemlist-fabric.mixins.json",
-		{
-			"config": "liteitemlist-fabric.client.mixins.json",
-			"environment": "client"
-		}
-	],
+	"mixins": [],
 	"depends": {
 		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.21.4",
 		"java": ">=21",
 		"fabric-api": "*",
-		"carpet": ">=1.4.161"
+		"carpet": ">=1.4.161",
+		"syncmatica": ">=0.3.14-sakura.4"
 	}
 }

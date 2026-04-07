@@ -3,6 +3,8 @@ package me.abboycn.task;
 import com.google.gson.annotations.SerializedName;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.Collection;
@@ -10,7 +12,7 @@ import java.util.HashSet;
 
 public class TaskItem {
     @SerializedName("itemId")
-    private String itemId; // 存储Item的Identifier字符串，用于序列化
+    private String itemId;
     @SerializedName("amount")
     private int amount;
     @SerializedName("available")
@@ -24,7 +26,6 @@ public class TaskItem {
     @SerializedName("principals")
     private Collection<String> principals;
 
-    // 空构造器（GSON反序列化需要）
     public TaskItem() {}
 
     public TaskItem(Item item, int amount) {
@@ -37,7 +38,6 @@ public class TaskItem {
         this.principals = new HashSet<>();
     }
 
-    // Getter & Setter
     public Item getItem() {
         return Registries.ITEM.get(Identifier.of(itemId));
     }
@@ -57,6 +57,8 @@ public class TaskItem {
     public int getAvailable() {
         return available;
     }
+
+    public void addAvailable(int amount) { this.available += amount; }
 
     public void setAvailable(int available) {
         this.available = available;
@@ -78,6 +80,8 @@ public class TaskItem {
         isImpt = impt;
     }
 
+    public boolean isFinished() {return available>amount;}
+
     public String getMsg() {
         return msg;
     }
@@ -88,6 +92,14 @@ public class TaskItem {
 
     public Collection<String> getPrincipals() {
         return principals;
+    }
+
+    public Text getItemInfo() {
+        return Text.literal(Formatting.GRAY + getItem().getName().getString())
+                .append(Text.literal(Formatting.GRAY + "数量: " + available + "/" + amount))
+                .append(Text.literal(isHard?Formatting.RED+"困难 ":Formatting.GOLD+"重要 "))
+                .append(Text.literal(Formatting.GRAY+msg))
+                .append(Text.literal(Formatting.GRAY+principals.stream().reduce("", (s1, s2) -> s1 + "," + s2).trim()));
     }
 
     public void setPrincipals(Collection<String> principals) {
