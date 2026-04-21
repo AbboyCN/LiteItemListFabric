@@ -119,13 +119,13 @@ public class ItemListTask {
 
     public void startAutoRefreshStorage(MinecraftServer server) {
         if (storageRefreshTimer != null) return;
-        storageRefreshTimer = new Timer(true); // 守护线程，不卡关服
+        storageRefreshTimer = new Timer(true);
         storageRefreshTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                  server.execute(() -> m_itemList.calcAvailable(server, m_botManager));
             }
-        }, 0, REFRESH_INTERVAL); // 0延迟启动，每3000ms=3秒
+        }, 0, REFRESH_INTERVAL);
     }
 
     public void setTime(Long time) {

@@ -71,10 +71,15 @@ public class LitematicaReader {
             Identifier blockId = entry.getKey();
             int count = entry.getValue();
             Item item = Registries.BLOCK.get(blockId).asItem();
-            if (item != Items.AIR) {
-                taskItemList.addTaskItem(new TaskItem(item, count));
+            if (item == Items.AIR) continue;
+            TaskItem taskItem = taskItemList.getTaskItem(item);
+            if (taskItem!=null){
+                taskItem.addAmount(count);
+                continue;
             }
+            taskItemList.addTaskItem(new TaskItem(item, count));
         }
+        taskItemList.setTaskItems(taskItemList.getTaskItems().stream().sorted(Comparator.comparingInt(TaskItem::getAmount).reversed()).toList());
         return taskItemList;
     }
 

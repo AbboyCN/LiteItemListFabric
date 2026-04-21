@@ -2,7 +2,7 @@ package me.abboycn.executor;
 
 import com.mojang.brigadier.context.CommandContext;
 import me.abboycn.LiteItemListFabric;
-import me.abboycn.gui.LiteItemListScreenHandler;
+import me.abboycn.gui.TaskItemListScreenHandler;
 import me.abboycn.task.ItemListTask;
 import me.abboycn.task.TaskItemList;
 import net.minecraft.server.command.ServerCommandSource;
@@ -32,7 +32,7 @@ public class CMDList {
             return 0;
         }
         try{
-            LiteItemListScreenHandler.openTaskItemMenu(player, itemListTask);
+            TaskItemListScreenHandler.openTaskItemListMenu(player, itemListTask,null);
             return 1;
         }
         catch (Exception e){

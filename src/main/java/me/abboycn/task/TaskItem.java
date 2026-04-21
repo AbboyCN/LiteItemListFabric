@@ -7,8 +7,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 public class TaskItem {
     @SerializedName("itemId")
@@ -49,6 +51,8 @@ public class TaskItem {
     public int getAmount() {
         return amount;
     }
+
+    public void addAmount(int n) { this.amount += n; }
 
     public void setAmount(int amount) {
         this.amount = amount;
@@ -94,12 +98,14 @@ public class TaskItem {
         return principals;
     }
 
-    public Text getItemInfo() {
-        return Text.literal(Formatting.GRAY + getItem().getName().getString())
-                .append(Text.literal(Formatting.GRAY + "数量: " + available + "/" + amount))
-                .append(Text.literal(isHard?Formatting.RED+"困难 ":Formatting.GOLD+"重要 "))
-                .append(Text.literal(Formatting.GRAY+msg))
-                .append(Text.literal(Formatting.GRAY+principals.stream().reduce("", (s1, s2) -> s1 + "," + s2).trim()));
+    public List<Text> getItemInfo() {
+        List<Text> ret = new ArrayList<>();
+        ret.add(Text.literal(getItem().getName().getString()));
+        ret.add(Text.literal(Formatting.GRAY + "数量: " + available + "/" + amount));
+        ret.add(Text.literal((isHard?Formatting.RED+"困难 ":"")+ (isImpt?Formatting.GOLD+"重要 ":"")));
+        ret.add(Text.literal(Formatting.GRAY+msg));
+        ret.add(Text.literal(Formatting.GRAY+"参与者: "+principals.stream().reduce("", (s1, s2) -> s1 + "," + s2).trim()));
+        return ret;
     }
 
     public void setPrincipals(Collection<String> principals) {

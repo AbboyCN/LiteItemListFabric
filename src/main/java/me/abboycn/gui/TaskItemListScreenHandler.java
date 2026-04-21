@@ -17,17 +17,22 @@ import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class LiteItemListScreenHandler extends ScreenHandler {
+import static me.abboycn.gui.TaskItemScreenHandler.openTaskItemMenu;
+
+public class TaskItemListScreenHandler extends ScreenHandler {
     public static final int MENU_SIZE = 54;
     public static final int FUNCTION_AREA_END = 9;                  // 功能区截至
     public static final int TASK_ITEM_START = FUNCTION_AREA_END;    // 物品展示区起始
-    public static final int TASK_ITEM_END = 45;                     // 物品展示区终止
+    public static final int TASK_ITEM_END = 54;                     // 物品展示区终止
+    public static final int TASK_ITEM_AREA_SIZE = TASK_ITEM_END-TASK_ITEM_START;
 
     private final Inventory menuInventory;
-    private boolean isFilterUnclaimed = false;
+    private FilterType_Clime filterTypeClime = FilterType_Clime.DEFAULT;
+    private int currentPage = 0;
     private ItemListTask task;
     private final ServerPlayerEntity player;
     private Collection<TaskItem> originalTaskList;
@@ -39,14 +44,22 @@ public class LiteItemListScreenHandler extends ScreenHandler {
     private static final int REFRESH_INTERVAL = 3000;
 
     private enum FunctionType {
+        PAST_PAGE,
         INFO_OVERVIEW,
         REFRESH_LIST,
-        FILTER_UNCLAIMED
+        FILTER_UNCLAIMED,
+        NEXT_PAGE
+    }
+
+    public enum FilterType_Clime{
+        DEFAULT,
+        CLIMED,
+        UNCLIMED
     }
 
     public record TaskItem_ItemStack(TaskItem taskItem,ItemStack itemStack) { }
 
-    public LiteItemListScreenHandler(int syncId, PlayerInventory playerInv) {
+    public TaskItemListScreenHandler(int syncId, PlayerInventory playerInv) {
         super(ScreenHandlerType.GENERIC_9X6, syncId);
         this.player = (ServerPlayerEntity) playerInv.player;
         this.menuInventory = new SimpleInventory(MENU_SIZE);
@@ -57,7 +70,7 @@ public class LiteItemListScreenHandler extends ScreenHandler {
         startAutoRefresh();
     }
 
-    public LiteItemListScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task) {
+    public TaskItemListScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task) {
         super(ScreenHandlerType.GENERIC_9X6, syncId);
         this.player = (ServerPlayerEntity) playerInv.player;
         this.menuInventory = inventory;
@@ -66,6 +79,23 @@ public class LiteItemListScreenHandler extends ScreenHandler {
         this.originalTaskList = task.getItemList().getTaskItems();
         this.slotToTaskItemMap = new HashMap<>();
         this.slotToFuncMap = new HashMap<>();
+        checkSize(inventory, MENU_SIZE);
+        inventory.onOpen(player);
+        initMenuSlots();
+        startAutoRefresh();
+    }
+
+    public TaskItemListScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task, int currentPage, FilterType_Clime filterTypeClime) {
+        super(ScreenHandlerType.GENERIC_9X6, syncId);
+        this.player = (ServerPlayerEntity) playerInv.player;
+        this.menuInventory = inventory;
+        this.task = task;
+        this.upStageTaskItemList = task.getItemList().getTaskItems();
+        this.originalTaskList = task.getItemList().getTaskItems();
+        this.slotToTaskItemMap = new HashMap<>();
+        this.slotToFuncMap = new HashMap<>();
+        this.currentPage = currentPage;
+        this.filterTypeClime = filterTypeClime;
         checkSize(inventory, MENU_SIZE);
         inventory.onOpen(player);
         initMenuSlots();
@@ -90,35 +120,54 @@ public class LiteItemListScreenHandler extends ScreenHandler {
     private void initFunctionArea() {
         slotToFuncMap = new HashMap<>();
 
-        // [0] 信息总览
+        // [0] 上一页
+        ItemStack pastPageItem = new ItemStack(Items.ARROW);
+        pastPageItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.GOLD + "<< 上一页"));
+        menuInventory.setStack(0, pastPageItem);
+        slotToFuncMap.put(0, FunctionType.PAST_PAGE);
+
+        // [1] 信息总览
         ItemStack infoItem = new ItemStack(Items.BOOK);
-        infoItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.BLUE + "任务物品总览"));
+        infoItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + "任务物品总览"));
         infoItem.set(DataComponentTypes.LORE,new LoreComponent(List.of(
                 Text.literal(Formatting.GRAY + "点击查看物品统计信息"),
                 Text.literal(Formatting.GRAY + "当前总数: " + upStageTaskItemList.size())
         )));
-        menuInventory.setStack(0, infoItem);
-        slotToFuncMap.put(0, FunctionType.INFO_OVERVIEW); // 绑定格子0→信息总览
+        menuInventory.setStack(1, infoItem);
+        slotToFuncMap.put(1, FunctionType.INFO_OVERVIEW); // 绑定格子0→信息总览
 
-        // [1] 刷新列表
+        // [2] 刷新列表
         ItemStack refreshItem = new ItemStack(Items.PAPER);
         refreshItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + "刷新列表"));
         refreshItem.set(DataComponentTypes.LORE,new LoreComponent(List.of(
                 Text.literal(Formatting.GRAY + "点击刷新物品列表"),
                 Text.literal(Formatting.GRAY + "同步最新认领状态")
         )));
-        menuInventory.setStack(1, refreshItem);
-        slotToFuncMap.put(1, FunctionType.REFRESH_LIST); // 绑定格子1→刷新列表
+        menuInventory.setStack(2, refreshItem);
+        slotToFuncMap.put(2, FunctionType.REFRESH_LIST);
 
-        // [2] 筛选
-        ItemStack filterItem = new ItemStack(Items.HOPPER);
-        filterItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.GREEN + (isFilterUnclaimed?"清除筛选":"筛选未认领")));
-        menuInventory.setStack(2, filterItem);
-        slotToFuncMap.put(2, FunctionType.FILTER_UNCLAIMED); // 绑定格子2→筛选未认领
+        // [5] 筛选
+        ItemStack filterItem_Clime = new ItemStack(Items.HOPPER);
+        filterItem_Clime.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + ("筛选认领状态")));
+        filterItem_Clime.set(DataComponentTypes.LORE,new LoreComponent(List.of(
+                Text.literal(filterTypeClime==FilterType_Clime.DEFAULT?Formatting.WHITE+"-> 全部":Formatting.GRAY+"    全部"),
+                Text.literal(filterTypeClime==FilterType_Clime.CLIMED?Formatting.WHITE+"-> 我认领的":Formatting.GRAY+"    我认领的"),
+                Text.literal(filterTypeClime==FilterType_Clime.UNCLIMED?Formatting.WHITE+"-> 未被认领":Formatting.GRAY+"    未被认领")
+        )));
+        menuInventory.setStack(5, filterItem_Clime);
+        slotToFuncMap.put(5, FunctionType.FILTER_UNCLAIMED);
+
+        // [8] 下一页
+        ItemStack nextPageItem = new ItemStack(Items.ARROW);
+        nextPageItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.GOLD + "下一页 >>"));
+        menuInventory.setStack(8, nextPageItem);
+        slotToFuncMap.put(8, FunctionType.NEXT_PAGE);
 
         // 剩余留空
-        for (int i = 3; i < FUNCTION_AREA_END; i++) {
-            menuInventory.setStack(i, ItemStack.EMPTY);
+        for (int i = 0; i < FUNCTION_AREA_END; i++) {
+            if(menuInventory.getStack(i) == null){
+                menuInventory.setStack(i, ItemStack.EMPTY);
+            }
         }
     }
 
@@ -128,8 +177,13 @@ public class LiteItemListScreenHandler extends ScreenHandler {
         Collection<TaskItem_ItemStack> finished = new ArrayList<>();
         Collection<TaskItem_ItemStack> unfinished = new ArrayList<>();
 
-        for (TaskItem taskItem : upStageTaskItemList) {
-            if (isFilterUnclaimed&&!taskItem.getPrincipals().isEmpty()) continue;
+        if(currentPage*45>upStageTaskItemList.size()){
+            currentPage=upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE;
+        }
+        for (int i = currentPage*45;i<Integer.min((currentPage+1)*45, upStageTaskItemList.size());i++) {
+            TaskItem taskItem = upStageTaskItemList.stream().toList().get(i);
+            if (filterTypeClime==FilterType_Clime.CLIMED&&!taskItem.getPrincipals().contains(player.getName().getString())) continue;
+            if (filterTypeClime==FilterType_Clime.UNCLIMED&&!taskItem.getPrincipals().isEmpty()) continue;
 
             ItemStack displayStack = new ItemStack(taskItem.getItem());
             String namePrefix = (taskItem.isImpt() ? Formatting.RED + "[重要] " : "") + (taskItem.isHard() ? Formatting.YELLOW + "[困难] " : "");
@@ -187,8 +241,8 @@ public class LiteItemListScreenHandler extends ScreenHandler {
     }
 
     private void updateTaskItemList(){
-        this.originalTaskList=task.getItemList().getTaskItems();
-        this.upStageTaskItemList=this.isFilterUnclaimed?this.originalTaskList.stream().filter(t -> t.getPrincipals().isEmpty()).toList():this.originalTaskList;
+        this.originalTaskList=task.getItemList().getTaskItems().stream().sorted(Comparator.comparingInt(TaskItem::getAmount).reversed()).toList();
+        this.upStageTaskItemList=getFilteredListFromOriginal();
     }
 
     private void refreshGui(){
@@ -217,6 +271,16 @@ public class LiteItemListScreenHandler extends ScreenHandler {
         }, 0, REFRESH_INTERVAL); // 0延迟启动，每3000ms=3秒
     }
 
+    private Collection<TaskItem> getFilteredListFromOriginal(){
+        Collection<TaskItem> ret = switch (filterTypeClime) {
+            case DEFAULT -> originalTaskList;
+            case CLIMED ->
+                    originalTaskList.stream().filter(t -> t.getPrincipals().contains(player.getName().getString())).toList();
+            case UNCLIMED -> originalTaskList.stream().filter(t -> t.getPrincipals().isEmpty()).toList();
+        };
+        return ret;
+    }
+
     // 点击事件处理
     @Override
     public void onSlotClick(int slotIndex, int button, SlotActionType actionType, PlayerEntity player) {
@@ -236,14 +300,13 @@ public class LiteItemListScreenHandler extends ScreenHandler {
             }
             return;
         }
+
         // 物品展示区
-        if (slotIndex < TASK_ITEM_END) {
-            TaskItem targetItem = slotToTaskItemMap.get(slotIndex);
-            if (targetItem != null) {
-                handleTaskItemClick(serverPlayer, targetItem, actionType);
-                initMenuSlots();
-                sendContentUpdates();
-            }
+        TaskItem targetItem = slotToTaskItemMap.get(slotIndex);
+        if (targetItem != null) {
+            handleTaskItemClick(serverPlayer, targetItem, actionType);
+            initMenuSlots();
+            sendContentUpdates();
         }
 
         refreshGui();
@@ -252,6 +315,9 @@ public class LiteItemListScreenHandler extends ScreenHandler {
     // 处理功能区点击
     private void handleMultiFunctionClick(ServerPlayerEntity player, FunctionType funcType) {
         switch (funcType) {
+            case PAST_PAGE:
+                toPastPage(player);
+                break;
             case INFO_OVERVIEW: // 信息总览
                 sendInfoOverview(player);
                 break;
@@ -261,7 +327,21 @@ public class LiteItemListScreenHandler extends ScreenHandler {
             case FILTER_UNCLAIMED: // 筛选
                 filterUnclaimedItems(player);
                 break;
+            case NEXT_PAGE:
+                toNextPage(player);
+                break;
         }
+    }
+
+    // 上一页
+    private void toPastPage(ServerPlayerEntity player) {
+        if(currentPage==0){
+            player.sendMessage(Text.literal(Formatting.RED+"已经是第一页了!"),true);
+            refreshGui();
+            return;
+        }
+        currentPage--;
+        refreshGui();
     }
 
     // 信息总览
@@ -283,18 +363,31 @@ public class LiteItemListScreenHandler extends ScreenHandler {
 
     // 切换筛选
     private void filterUnclaimedItems(ServerPlayerEntity player) {
-        if (!isFilterUnclaimed) {
-            isFilterUnclaimed = true;
-            upStageTaskItemList = originalTaskList.stream()
-                    .filter(t -> t.getPrincipals().isEmpty())
-                    .toList();
+        switch (filterTypeClime) {
+            case DEFAULT:
+                filterTypeClime=FilterType_Clime.CLIMED;
+                break;
+            case CLIMED:
+                filterTypeClime=FilterType_Clime.UNCLIMED;
+                break;
+            case UNCLIMED:
+                filterTypeClime=FilterType_Clime.DEFAULT;
+                break;
         }
-        else {
-            isFilterUnclaimed = false;
-            upStageTaskItemList = originalTaskList;
-        }
+        upStageTaskItemList=getFilteredListFromOriginal();
         refreshGui();
         player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+    }
+
+    // 下一页
+    private void toNextPage(ServerPlayerEntity player) {
+        if((currentPage+1)*TASK_ITEM_AREA_SIZE >= upStageTaskItemList.size()) {
+            player.sendMessage(Text.literal(Formatting.RED+"已经是最后一页了!"),true);
+            refreshGui();
+            return;
+        }
+        currentPage++;
+        refreshGui();
     }
 
     // 处理物品展示区点击
@@ -309,7 +402,8 @@ public class LiteItemListScreenHandler extends ScreenHandler {
         }
 
         if (actionType == SlotActionType.QUICK_MOVE) {
-            player.sendMessage(targetItem.getItemInfo());
+            player.closeHandledScreen();
+            openTaskItemMenu(player,task,targetItem, new TaskItemScreenHandler.SuperInfo(currentPage,filterTypeClime));
         }
     }
 
@@ -345,16 +439,17 @@ public class LiteItemListScreenHandler extends ScreenHandler {
     }
 
     // 打开菜单
-    public static void openTaskItemMenu(ServerPlayerEntity player, ItemListTask task) {
+    public static void openTaskItemListMenu(ServerPlayerEntity player, ItemListTask task, @Nullable TaskItemScreenHandler.SuperInfo superInfo) {
         player.openHandledScreen(new net.minecraft.screen.NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
-                return Text.literal("任务: "+task.getName());
+                return Text.literal("任务: "+task.getName()+" ("+task.getItemList().getTaskItemCount()+")");
             }
 
             @Override
             public ScreenHandler createMenu(int syncId, PlayerInventory playerInv, PlayerEntity player) {
-                return new LiteItemListScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task);
+                return superInfo==null? new TaskItemListScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task)
+                        : new TaskItemListScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task, superInfo.currentPage(), superInfo.filterTypeClime());
             }
         });
     }

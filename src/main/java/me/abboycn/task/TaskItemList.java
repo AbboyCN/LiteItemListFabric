@@ -65,6 +65,10 @@ public class TaskItemList {
         return taskItems.stream().filter(taskItem -> taskItem.getItem().equals(Registries.ITEM.get(Identifier.of(itemId)))).findFirst().orElse(null);
     }
 
+    public boolean contains(Item item) {
+        return taskItems.stream().anyMatch(taskItem -> taskItem.getItem().equals(item));
+    }
+
     public int getTaskItemCount() {
         return taskItems.size();
     }
