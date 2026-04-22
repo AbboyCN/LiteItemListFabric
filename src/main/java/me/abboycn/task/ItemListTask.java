@@ -3,6 +3,7 @@ package me.abboycn.task;
 import me.abboycn.LiteItemListFabric;
 import me.abboycn.bot.TaskStorageBotManager;
 import me.abboycn.data.LitematicaReader;
+import me.abboycn.gui.MenuListStatus;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
@@ -22,7 +23,7 @@ public class ItemListTask {
     @SerializedName("creator")
     private String m_creator;
     @SerializedName("members")
-    private Collection<String> m_members = new ArrayList<>();
+    private Collection<TaskMember> m_members = new ArrayList<>();
     @SerializedName("time")
     private Long m_time;
     @SerializedName("botManager")
@@ -56,8 +57,16 @@ public class ItemListTask {
         return this.m_creator;
     }
 
-    public Collection<String> getMembers() {
+    public Collection<TaskMember> getMembers() {
         return this.m_members;
+    }
+
+    public TaskMember getMember(String name) {
+        return m_members.stream().filter(member -> member.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    public TaskMember getMember(ServerPlayerEntity player) {
+        return getMember(player.getName().getString());
     }
 
     public Long getTime() {
@@ -88,24 +97,36 @@ public class ItemListTask {
         this.m_creator = creator.getName().getString();
     }
 
-    public void setMembers(Collection<String> members) {
+    public void setMembers(Collection<TaskMember> members) {
         this.m_members = members;
     }
 
-    public void addMember(String member) {
+    public void addMember(TaskMember member) {
         this.m_members.add(member);
     }
 
+    public void addMember(String member) {
+        this.m_members.add(new TaskMember(member,new MenuListStatus(MenuListStatus.FilterType_Clime.DEFAULT, MenuListStatus.FilterType_Finished.DEFAULT, MenuListStatus.FilterType_Mark.DEFAULT, 0)));
+    }
+
     public void addMember(ServerPlayerEntity member) {
-        this.m_members.add(member.getName().getString());
+        addMember(member.getName().getString());
     }
 
     public void removeMember(String member) {
-        this.m_members.remove(member);
+        this.m_members.removeIf(m -> m.getName().equals(member));
     }
 
     public void removeMember(ServerPlayerEntity member) {
-        this.m_members.remove(member.getName().getString());
+        removeMember(member.getName().getString());
+    }
+
+    public boolean containsMember(String member) {
+        return this.m_members.stream().anyMatch(m -> m.getName().equals(member));
+    }
+
+    public boolean containsMember(ServerPlayerEntity member) {
+        return containsMember(member.getName().getString());
     }
 
     public void refreshTaskItemList() {

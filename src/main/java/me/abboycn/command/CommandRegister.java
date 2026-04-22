@@ -41,6 +41,7 @@ public class CommandRegister {
                                         .executes(CMDTaskLeave::CMDTaskLeaveExecutor)))
                         .then(CommandManager.literal("switch")
                                 .then(CommandManager.argument("project", StringArgumentType.string())
+                                        .suggests((context, builder)->TABTaskSuggester.projectSuggester(builder))
                                         .executes(CMDTaskSwitch::CMDTaskSwitchExecutor))))
                 .then(CommandManager.literal("list")
                         .executes(CMDList::CMDListExecutor))

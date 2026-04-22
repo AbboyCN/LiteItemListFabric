@@ -17,7 +17,6 @@ import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -30,7 +29,6 @@ public class TaskItemScreenHandler extends ScreenHandler {
     private Map<Integer, TaskItemScreenHandler.FunctionType> slotToFuncMap;               // 功能区映射
     private TaskItem item;
     private ItemListTask task;
-    private SuperInfo superInfo;
 
     private Timer guiRefreshTimer;
     private static final int REFRESH_INTERVAL = 3000;
@@ -38,10 +36,10 @@ public class TaskItemScreenHandler extends ScreenHandler {
     private enum FunctionType {
         BACK,
         INFO_OVERVIEW,
-        REFRESH_LIST
+        REFRESH_LIST,
+        SWITCH_HARD,
+        SWITCH_IMPT
     }
-
-    public record SuperInfo(int currentPage, TaskItemListScreenHandler.FilterType_Clime filterTypeClime) {}
 
     public TaskItemScreenHandler(int syncId, PlayerInventory playerInv) {
         super(ScreenHandlerType.GENERIC_9X1, syncId);
@@ -52,14 +50,13 @@ public class TaskItemScreenHandler extends ScreenHandler {
         startAutoRefresh();
     }
 
-    public TaskItemScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task, TaskItem item, @Nullable SuperInfo superInfo) {
+    public TaskItemScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task, TaskItem item) {
         super(ScreenHandlerType.GENERIC_9X1, syncId);
         this.player = (ServerPlayerEntity) playerInv.player;
         this.menuInventory = inventory;
         this.item = item;
         this.task = task;
         this.slotToFuncMap = new HashMap<>();
-        this.superInfo = superInfo;
         checkSize(inventory, MENU_SIZE);
         inventory.onOpen(player);
         initMenuSlots();
@@ -87,6 +84,15 @@ public class TaskItemScreenHandler extends ScreenHandler {
         menuInventory.setStack(0, backItem);
         slotToFuncMap.put(0, TaskItemScreenHandler.FunctionType.BACK);
 
+        // [2] 刷新物品
+        ItemStack refreshItem = new ItemStack(Items.PAPER);
+        refreshItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + "刷新物品信息"));
+        refreshItem.set(DataComponentTypes.LORE,new LoreComponent(List.of(
+                Text.literal(Formatting.GRAY + "点击刷新物品")
+        )));
+        menuInventory.setStack(2, refreshItem);
+        slotToFuncMap.put(2, TaskItemScreenHandler.FunctionType.REFRESH_LIST);
+
         // [4] 信息
         ItemStack infoItem = new ItemStack(item.getItem());
         infoItem.set(DataComponentTypes.CUSTOM_NAME, Text.literal(Formatting.BLUE + item.getItem().getName().getString()));
@@ -94,14 +100,19 @@ public class TaskItemScreenHandler extends ScreenHandler {
         menuInventory.setStack(4, infoItem);
         slotToFuncMap.put(4, TaskItemScreenHandler.FunctionType.INFO_OVERVIEW);
 
-        // [2] 刷新物品
-        ItemStack refreshItem = new ItemStack(Items.PAPER);
-        refreshItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + "刷新物品信息"));
-        refreshItem.set(DataComponentTypes.LORE,new LoreComponent(List.of(
-                Text.literal(Formatting.GRAY + "点击刷新物品列表")
-        )));
-        menuInventory.setStack(2, refreshItem);
-        slotToFuncMap.put(2, TaskItemScreenHandler.FunctionType.REFRESH_LIST);
+        // [6] 切换困难
+        ItemStack switchHardItem = new ItemStack(item.isHard()? Items.RED_BANNER : Items.GRAY_BANNER);
+        switchHardItem.set(DataComponentTypes.CUSTOM_NAME, Text.literal(item.isHard() ? Formatting.RED + "困难: 是" : Formatting.YELLOW + "困难: 否"));
+        menuInventory.setStack(6, switchHardItem);
+        slotToFuncMap.put(6, FunctionType.SWITCH_HARD);
+
+        // [7] 切换困难
+        ItemStack switchImptItem = new ItemStack(item.isImpt()? Items.RED_BANNER : Items.GRAY_BANNER);
+        switchImptItem.set(DataComponentTypes.CUSTOM_NAME, Text.literal(item.isImpt() ? Formatting.RED + "重要: 是" : Formatting.YELLOW + "困难: 否"));
+        menuInventory.setStack(7, switchImptItem);
+        slotToFuncMap.put(7, FunctionType.SWITCH_IMPT);
+
+
 
         // 剩余留空
         for (int i = 0; i < MENU_SIZE; i++) {
@@ -135,22 +146,30 @@ public class TaskItemScreenHandler extends ScreenHandler {
             case BACK:          // 返回上级菜单
                 backToSuperMenu(player);
                 break;
+            case REFRESH_LIST:  // 刷新列表
+                refreshTaskItem(player);
+                break;
             case INFO_OVERVIEW: // 信息总览
                 sendInfoOverview(player);
                 break;
-            case REFRESH_LIST:  // 刷新列表
-                refreshTaskItem(player);
+            case SWITCH_HARD: // 切换困难
+                switchHard(player);
+                break;
+            case SWITCH_IMPT: // 切换重要
+                switchImpt(player);
                 break;
         }
     }
 
+    // 返回上一级
     private void backToSuperMenu(PlayerEntity player) {
-        if (superInfo!=null){
-            openTaskItemListMenu((ServerPlayerEntity) player,task,superInfo);
-        }
-        else{
-            player.sendMessage(Text.literal(Formatting.RED+"找不到上级菜单"),true);
-        }
+        openTaskItemListMenu((ServerPlayerEntity) player, task);
+    }
+
+    // 刷新列表
+    private void refreshTaskItem(ServerPlayerEntity player) {
+        refreshGui();
+        player.sendMessage(Text.literal(Formatting.GREEN + "列表已刷新！"), true);
     }
 
     // 信息总览
@@ -159,10 +178,16 @@ public class TaskItemScreenHandler extends ScreenHandler {
         player.sendMessage(item.getItemInfo().stream().reduce(Text.literal(""), (s1, s2) -> s1.copy().append(Text.literal("\n")).append(s2)));
     }
 
-    // 刷新列表
-    private void refreshTaskItem(ServerPlayerEntity player) {
+    // 切换困难
+    private void switchHard(ServerPlayerEntity player) {
+        item.setHard(!item.isHard());
         refreshGui();
-        player.sendMessage(Text.literal(Formatting.GREEN + "列表已刷新！"), true);
+    }
+
+    // 切换重要
+    private void switchImpt(ServerPlayerEntity player) {
+        item.setImpt(!item.isImpt());
+        refreshGui();
     }
 
     private void refreshGui(){
@@ -185,7 +210,7 @@ public class TaskItemScreenHandler extends ScreenHandler {
                 }
                 player.server.execute(() -> refreshGui());
             }
-        }, 0, REFRESH_INTERVAL); // 0延迟启动，每3000ms=3秒
+        }, 0, REFRESH_INTERVAL);
     }
 
     // 禁用其他点击
@@ -220,7 +245,7 @@ public class TaskItemScreenHandler extends ScreenHandler {
     }
 
     // 打开菜单
-    public static void openTaskItemMenu(ServerPlayerEntity player, ItemListTask task, TaskItem item, @Nullable SuperInfo superInfo) {
+    public static void openTaskItemMenu(ServerPlayerEntity player, ItemListTask task, TaskItem item) {
         player.openHandledScreen(new net.minecraft.screen.NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
@@ -229,7 +254,7 @@ public class TaskItemScreenHandler extends ScreenHandler {
 
             @Override
             public ScreenHandler createMenu(int syncId, PlayerInventory playerInv, PlayerEntity player) {
-                return new TaskItemScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task, item, superInfo);
+                return new TaskItemScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task, item);
             }
         });
     }

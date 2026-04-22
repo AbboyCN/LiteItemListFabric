@@ -10,6 +10,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
@@ -17,7 +18,6 @@ import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -31,7 +31,9 @@ public class TaskItemListScreenHandler extends ScreenHandler {
     public static final int TASK_ITEM_AREA_SIZE = TASK_ITEM_END-TASK_ITEM_START;
 
     private final Inventory menuInventory;
-    private FilterType_Clime filterTypeClime = FilterType_Clime.DEFAULT;
+    private MenuListStatus.FilterType_Clime filterTypeClime = MenuListStatus.FilterType_Clime.DEFAULT;
+    private MenuListStatus.FilterType_Finished filterTypeFinished = MenuListStatus.FilterType_Finished.DEFAULT;
+    private MenuListStatus.FilterType_Mark filterTypeMark = MenuListStatus.FilterType_Mark.DEFAULT;
     private int currentPage = 0;
     private ItemListTask task;
     private final ServerPlayerEntity player;
@@ -48,13 +50,9 @@ public class TaskItemListScreenHandler extends ScreenHandler {
         INFO_OVERVIEW,
         REFRESH_LIST,
         FILTER_UNCLAIMED,
+        FILTER_FINISHED,
+        FILTER_MARK,
         NEXT_PAGE
-    }
-
-    public enum FilterType_Clime{
-        DEFAULT,
-        CLIMED,
-        UNCLIMED
     }
 
     public record TaskItem_ItemStack(TaskItem taskItem,ItemStack itemStack) { }
@@ -70,7 +68,7 @@ public class TaskItemListScreenHandler extends ScreenHandler {
         startAutoRefresh();
     }
 
-    public TaskItemListScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task) {
+    public TaskItemListScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task, MenuListStatus status) {
         super(ScreenHandlerType.GENERIC_9X6, syncId);
         this.player = (ServerPlayerEntity) playerInv.player;
         this.menuInventory = inventory;
@@ -79,23 +77,10 @@ public class TaskItemListScreenHandler extends ScreenHandler {
         this.originalTaskList = task.getItemList().getTaskItems();
         this.slotToTaskItemMap = new HashMap<>();
         this.slotToFuncMap = new HashMap<>();
-        checkSize(inventory, MENU_SIZE);
-        inventory.onOpen(player);
-        initMenuSlots();
-        startAutoRefresh();
-    }
-
-    public TaskItemListScreenHandler(int syncId, PlayerInventory playerInv, Inventory inventory, ItemListTask task, int currentPage, FilterType_Clime filterTypeClime) {
-        super(ScreenHandlerType.GENERIC_9X6, syncId);
-        this.player = (ServerPlayerEntity) playerInv.player;
-        this.menuInventory = inventory;
-        this.task = task;
-        this.upStageTaskItemList = task.getItemList().getTaskItems();
-        this.originalTaskList = task.getItemList().getTaskItems();
-        this.slotToTaskItemMap = new HashMap<>();
-        this.slotToFuncMap = new HashMap<>();
-        this.currentPage = currentPage;
-        this.filterTypeClime = filterTypeClime;
+        this.filterTypeClime = status.filterTypeClime;
+        this.filterTypeFinished = status.filterTypeFinished;
+        this.filterTypeMark = status.filterTypeMark;
+        this.currentPage = status.page;
         checkSize(inventory, MENU_SIZE);
         inventory.onOpen(player);
         initMenuSlots();
@@ -141,21 +126,46 @@ public class TaskItemListScreenHandler extends ScreenHandler {
         refreshItem.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + "刷新列表"));
         refreshItem.set(DataComponentTypes.LORE,new LoreComponent(List.of(
                 Text.literal(Formatting.GRAY + "点击刷新物品列表"),
-                Text.literal(Formatting.GRAY + "同步最新认领状态")
+                Text.literal(Formatting.GRAY + "将立即同步最新物品物品状态并刷新假人库存")
         )));
         menuInventory.setStack(2, refreshItem);
         slotToFuncMap.put(2, FunctionType.REFRESH_LIST);
 
-        // [5] 筛选
+        // [5] 筛选:认领状态
         ItemStack filterItem_Clime = new ItemStack(Items.HOPPER);
         filterItem_Clime.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + ("筛选认领状态")));
         filterItem_Clime.set(DataComponentTypes.LORE,new LoreComponent(List.of(
-                Text.literal(filterTypeClime==FilterType_Clime.DEFAULT?Formatting.WHITE+"-> 全部":Formatting.GRAY+"    全部"),
-                Text.literal(filterTypeClime==FilterType_Clime.CLIMED?Formatting.WHITE+"-> 我认领的":Formatting.GRAY+"    我认领的"),
-                Text.literal(filterTypeClime==FilterType_Clime.UNCLIMED?Formatting.WHITE+"-> 未被认领":Formatting.GRAY+"    未被认领")
+                Text.literal(filterTypeClime== MenuListStatus.FilterType_Clime.DEFAULT?Formatting.WHITE+"-> 全部":Formatting.GRAY+"    全部"),
+                Text.literal(filterTypeClime== MenuListStatus.FilterType_Clime.CLIMED?Formatting.WHITE+"-> 我认领的":Formatting.GRAY+"    我认领的"),
+                Text.literal(filterTypeClime== MenuListStatus.FilterType_Clime.UNCLIMED?Formatting.WHITE+"-> 未被认领":Formatting.GRAY+"    未被认领")
         )));
         menuInventory.setStack(5, filterItem_Clime);
         slotToFuncMap.put(5, FunctionType.FILTER_UNCLAIMED);
+
+        // [6] 筛选:完成情况
+        ItemStack filterItem_Finished = new ItemStack(Items.HOPPER);
+        filterItem_Finished.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + ("筛选完成状态")));
+        filterItem_Finished.set(DataComponentTypes.LORE,new LoreComponent(List.of(
+                Text.literal(filterTypeFinished== MenuListStatus.FilterType_Finished.DEFAULT?Formatting.WHITE+"-> 全部":Formatting.GRAY+"    全部"),
+                Text.literal(filterTypeFinished== MenuListStatus.FilterType_Finished.UNFINISHED?Formatting.WHITE+"-> 未开始/进行中":Formatting.GRAY+"    未开始/进行中"),
+                Text.literal(filterTypeFinished== MenuListStatus.FilterType_Finished.PROCESSING?Formatting.WHITE+"-> 进行中":Formatting.GRAY+"    进行中"),
+                Text.literal(filterTypeFinished== MenuListStatus.FilterType_Finished.NOTSTART?Formatting.WHITE+"-> 未开始":Formatting.GRAY+"    未开始"),
+                Text.literal(filterTypeFinished== MenuListStatus.FilterType_Finished.FINISHED?Formatting.WHITE+"-> 已完成":Formatting.GRAY+"    已完成")
+        )));
+        menuInventory.setStack(6, filterItem_Finished);
+        slotToFuncMap.put(6, FunctionType.FILTER_FINISHED);
+
+        // [7] 筛选:物品属性
+        ItemStack filterItem_Mark = new ItemStack(Items.HOPPER);
+        filterItem_Mark.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + ("筛选物品标记")));
+        filterItem_Mark.set(DataComponentTypes.LORE,new LoreComponent(List.of(
+                Text.literal(filterTypeMark== MenuListStatus.FilterType_Mark.DEFAULT?Formatting.WHITE+"-> 全部":Formatting.GRAY+"    全部"),
+                Text.literal(filterTypeMark== MenuListStatus.FilterType_Mark.IMPTORHARD ?Formatting.WHITE+"-> 重要/困难":Formatting.GRAY+"    重要/困难"),
+                Text.literal(filterTypeMark== MenuListStatus.FilterType_Mark.IMPT?Formatting.WHITE+"-> 重要":Formatting.GRAY+"    重要"),
+                Text.literal(filterTypeMark== MenuListStatus.FilterType_Mark.HARD?Formatting.WHITE+"-> 困难":Formatting.GRAY+"    困难")
+        )));
+        menuInventory.setStack(7, filterItem_Mark);
+        slotToFuncMap.put(7, FunctionType.FILTER_MARK);
 
         // [8] 下一页
         ItemStack nextPageItem = new ItemStack(Items.ARROW);
@@ -182,8 +192,8 @@ public class TaskItemListScreenHandler extends ScreenHandler {
         }
         for (int i = currentPage*45;i<Integer.min((currentPage+1)*45, upStageTaskItemList.size());i++) {
             TaskItem taskItem = upStageTaskItemList.stream().toList().get(i);
-            if (filterTypeClime==FilterType_Clime.CLIMED&&!taskItem.getPrincipals().contains(player.getName().getString())) continue;
-            if (filterTypeClime==FilterType_Clime.UNCLIMED&&!taskItem.getPrincipals().isEmpty()) continue;
+            if (filterTypeClime== MenuListStatus.FilterType_Clime.CLIMED&&!taskItem.getPrincipals().contains(player.getName().getString())) continue;
+            if (filterTypeClime== MenuListStatus.FilterType_Clime.UNCLIMED&&!taskItem.getPrincipals().isEmpty()) continue;
 
             ItemStack displayStack = new ItemStack(taskItem.getItem());
             String namePrefix = (taskItem.isImpt() ? Formatting.RED + "[重要] " : "") + (taskItem.isHard() ? Formatting.YELLOW + "[困难] " : "");
@@ -191,6 +201,12 @@ public class TaskItemListScreenHandler extends ScreenHandler {
 
             List<Text> lore = new ArrayList<>();
             lore.add(Text.literal(Formatting.GRAY + "总量: " + (taskItem.isFinished()?Formatting.GREEN:Formatting.RED) + taskItem.getAvailable() + " / " + taskItem.getAmount()));
+            if(!taskItem.isFinished()){
+                int box = (taskItem.getAmount()-taskItem.getAvailable())/1728;
+                int stack = (taskItem.getAmount()-taskItem.getAvailable()-1728*box)/64;
+                int single = (taskItem.getAmount()-taskItem.getAvailable())%64;
+                lore.add(Text.literal(Formatting.GRAY + "还需: " + (box!=0?box+"盒 ":"") + (stack!=0?stack+"组 ":"") + (single!=0?single+"个":"") + " (" + taskItem.getAmount() + "个)"));
+            }
             lore.add(Text.literal(Formatting.GRAY + "备注: " + (taskItem.isHard() ? "困难 " : "") + (taskItem.isImpt() ? "重要 " : "")));
             lore.add(Text.literal(Formatting.GRAY + taskItem.getMsg()));
             lore.add(Text.literal(Formatting.GRAY + taskItem.getItem().toString()));
@@ -274,9 +290,21 @@ public class TaskItemListScreenHandler extends ScreenHandler {
     private Collection<TaskItem> getFilteredListFromOriginal(){
         Collection<TaskItem> ret = switch (filterTypeClime) {
             case DEFAULT -> originalTaskList;
-            case CLIMED ->
-                    originalTaskList.stream().filter(t -> t.getPrincipals().contains(player.getName().getString())).toList();
+            case CLIMED -> originalTaskList.stream().filter(t -> t.getPrincipals().contains(player.getName().getString())).toList();
             case UNCLIMED -> originalTaskList.stream().filter(t -> t.getPrincipals().isEmpty()).toList();
+        };
+        ret = switch (filterTypeFinished) {
+            case DEFAULT -> ret;
+            case UNFINISHED -> ret.stream().filter(t -> !t.isFinished()).toList();
+            case PROCESSING -> ret.stream().filter(t -> (!t.isFinished())&&t.getAvailable()!=0).toList();
+            case NOTSTART -> ret.stream().filter(t -> t.getAvailable()==0).toList();
+            case FINISHED -> ret.stream().filter(TaskItem::isFinished).toList();
+        };
+        ret = switch (filterTypeMark) {
+            case DEFAULT -> ret;
+            case IMPTORHARD -> ret.stream().filter(t -> t.isHard()&&t.isImpt()).toList();
+            case IMPT -> ret.stream().filter(TaskItem::isImpt).toList();
+            case HARD -> ret.stream().filter(TaskItem::isHard).toList();
         };
         return ret;
     }
@@ -324,8 +352,14 @@ public class TaskItemListScreenHandler extends ScreenHandler {
             case REFRESH_LIST: // 刷新列表
                 refreshTaskItemList(player);
                 break;
-            case FILTER_UNCLAIMED: // 筛选
+            case FILTER_UNCLAIMED: // 筛选认领状态
                 filterUnclaimedItems(player);
+                break;
+            case FILTER_FINISHED: // 筛选完成状态
+                filterFinishedItems(player);
+                break;
+            case FILTER_MARK: // 筛选物品标记
+                filterMarkItems(player);
                 break;
             case NEXT_PAGE:
                 toNextPage(player);
@@ -363,17 +397,39 @@ public class TaskItemListScreenHandler extends ScreenHandler {
 
     // 切换筛选
     private void filterUnclaimedItems(ServerPlayerEntity player) {
-        switch (filterTypeClime) {
-            case DEFAULT:
-                filterTypeClime=FilterType_Clime.CLIMED;
-                break;
-            case CLIMED:
-                filterTypeClime=FilterType_Clime.UNCLIMED;
-                break;
-            case UNCLIMED:
-                filterTypeClime=FilterType_Clime.DEFAULT;
-                break;
-        }
+        filterTypeClime = switch(filterTypeClime){
+            case DEFAULT -> MenuListStatus.FilterType_Clime.CLIMED;
+            case CLIMED -> MenuListStatus.FilterType_Clime.UNCLIMED;
+            case UNCLIMED -> MenuListStatus.FilterType_Clime.DEFAULT;
+        };
+        task.getMember(player).getListFilter().filterTypeClime=filterTypeClime;
+        upStageTaskItemList=getFilteredListFromOriginal();
+        refreshGui();
+        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+    }
+
+    private void filterFinishedItems(ServerPlayerEntity player) {
+        filterTypeFinished = switch (filterTypeFinished){
+            case DEFAULT -> MenuListStatus.FilterType_Finished.UNFINISHED;
+            case UNFINISHED -> MenuListStatus.FilterType_Finished.PROCESSING;
+            case PROCESSING -> MenuListStatus.FilterType_Finished.NOTSTART;
+            case NOTSTART -> MenuListStatus.FilterType_Finished.FINISHED;
+            case FINISHED -> MenuListStatus.FilterType_Finished.DEFAULT;
+        };
+        task.getMember(player).getListFilter().filterTypeFinished=filterTypeFinished;
+        upStageTaskItemList=getFilteredListFromOriginal();
+        refreshGui();
+        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+    }
+
+    private void filterMarkItems(ServerPlayerEntity player) {
+        filterTypeMark = switch (filterTypeMark){
+            case DEFAULT -> MenuListStatus.FilterType_Mark.IMPTORHARD;
+            case IMPTORHARD -> MenuListStatus.FilterType_Mark.IMPT;
+            case IMPT -> MenuListStatus.FilterType_Mark.HARD;
+            case HARD -> MenuListStatus.FilterType_Mark.DEFAULT;
+        };
+        task.getMember(player).getListFilter().filterTypeMark=filterTypeMark;
         upStageTaskItemList=getFilteredListFromOriginal();
         refreshGui();
         player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
@@ -403,7 +459,7 @@ public class TaskItemListScreenHandler extends ScreenHandler {
 
         if (actionType == SlotActionType.QUICK_MOVE) {
             player.closeHandledScreen();
-            openTaskItemMenu(player,task,targetItem, new TaskItemScreenHandler.SuperInfo(currentPage,filterTypeClime));
+            openTaskItemMenu(player,task,targetItem);
         }
     }
 
@@ -439,8 +495,8 @@ public class TaskItemListScreenHandler extends ScreenHandler {
     }
 
     // 打开菜单
-    public static void openTaskItemListMenu(ServerPlayerEntity player, ItemListTask task, @Nullable TaskItemScreenHandler.SuperInfo superInfo) {
-        player.openHandledScreen(new net.minecraft.screen.NamedScreenHandlerFactory() {
+    public static void openTaskItemListMenu(ServerPlayerEntity player, ItemListTask task) {
+        player.openHandledScreen(new NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
                 return Text.literal("任务: "+task.getName()+" ("+task.getItemList().getTaskItemCount()+")");
@@ -448,8 +504,7 @@ public class TaskItemListScreenHandler extends ScreenHandler {
 
             @Override
             public ScreenHandler createMenu(int syncId, PlayerInventory playerInv, PlayerEntity player) {
-                return superInfo==null? new TaskItemListScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task)
-                        : new TaskItemListScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task, superInfo.currentPage(), superInfo.filterTypeClime());
+                return new TaskItemListScreenHandler(syncId, playerInv, new SimpleInventory(MENU_SIZE), task, task.getMember((ServerPlayerEntity) player).getListFilter());
             }
         });
     }

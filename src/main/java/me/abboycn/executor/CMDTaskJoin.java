@@ -17,7 +17,7 @@ public class CMDTaskJoin {
             player.sendMessage(Text.literal("§c未知的任务,请检查拼写或使用/liteitemlist task list查看任务列表!"));
             return 0;
         }
-        if(task.getMembers().contains(player.getName().getString())){
+        if(task.containsMember(player)){
             player.sendMessage(Text.literal("§c你已经参与此任务!"));
             return 1;
         }

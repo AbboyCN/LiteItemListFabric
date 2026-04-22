@@ -32,7 +32,7 @@ public class CMDList {
             return 0;
         }
         try{
-            TaskItemListScreenHandler.openTaskItemListMenu(player, itemListTask,null);
+            TaskItemListScreenHandler.openTaskItemListMenu(player, itemListTask);
             return 1;
         }
         catch (Exception e){
