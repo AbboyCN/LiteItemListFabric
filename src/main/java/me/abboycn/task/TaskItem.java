@@ -104,7 +104,7 @@ public class TaskItem {
         ret.add(Text.literal(Formatting.GRAY + "数量: " + available + "/" + amount));
         ret.add(Text.literal((isHard?Formatting.RED+"困难 ":"")+ (isImpt?Formatting.GOLD+"重要 ":"")));
         ret.add(Text.literal(Formatting.GRAY+msg));
-        ret.add(Text.literal(Formatting.GRAY+"参与者: "+principals.stream().reduce("", (s1, s2) -> s1 + "," + s2).trim()));
+        ret.add(Text.literal(Formatting.GRAY+"参与者: "+String.join(",", principals)));
         return ret;
     }
 

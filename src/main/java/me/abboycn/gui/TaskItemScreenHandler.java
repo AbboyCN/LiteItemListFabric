@@ -100,17 +100,19 @@ public class TaskItemScreenHandler extends ScreenHandler {
         menuInventory.setStack(4, infoItem);
         slotToFuncMap.put(4, TaskItemScreenHandler.FunctionType.INFO_OVERVIEW);
 
-        // [6] 切换困难
-        ItemStack switchHardItem = new ItemStack(item.isHard()? Items.RED_BANNER : Items.GRAY_BANNER);
-        switchHardItem.set(DataComponentTypes.CUSTOM_NAME, Text.literal(item.isHard() ? Formatting.RED + "困难: 是" : Formatting.YELLOW + "困难: 否"));
-        menuInventory.setStack(6, switchHardItem);
-        slotToFuncMap.put(6, FunctionType.SWITCH_HARD);
+        // [6] 切换重要
+        ItemStack switchImptItem = new ItemStack(item.isImpt()? Items.YELLOW_BANNER : Items.GRAY_BANNER);
+        switchImptItem.set(DataComponentTypes.CUSTOM_NAME, Text.literal(item.isImpt() ? Formatting.RED + "重要: 是" : Formatting.YELLOW + "困难: 否"));
+        menuInventory.setStack(6, switchImptItem);
+        slotToFuncMap.put(6, FunctionType.SWITCH_IMPT);
 
         // [7] 切换困难
-        ItemStack switchImptItem = new ItemStack(item.isImpt()? Items.RED_BANNER : Items.GRAY_BANNER);
-        switchImptItem.set(DataComponentTypes.CUSTOM_NAME, Text.literal(item.isImpt() ? Formatting.RED + "重要: 是" : Formatting.YELLOW + "困难: 否"));
-        menuInventory.setStack(7, switchImptItem);
-        slotToFuncMap.put(7, FunctionType.SWITCH_IMPT);
+        ItemStack switchHardItem = new ItemStack(item.isHard()? Items.RED_BANNER : Items.GRAY_BANNER);
+        switchHardItem.set(DataComponentTypes.CUSTOM_NAME, Text.literal(item.isHard() ? Formatting.RED + "困难: 是" : Formatting.YELLOW + "困难: 否"));
+        menuInventory.setStack(7, switchHardItem);
+        slotToFuncMap.put(7, FunctionType.SWITCH_HARD);
+
+
 
 
 

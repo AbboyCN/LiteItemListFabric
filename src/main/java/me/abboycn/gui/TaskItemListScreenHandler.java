@@ -196,7 +196,7 @@ public class TaskItemListScreenHandler extends ScreenHandler {
             if (filterTypeClime== MenuListStatus.FilterType_Clime.UNCLIMED&&!taskItem.getPrincipals().isEmpty()) continue;
 
             ItemStack displayStack = new ItemStack(taskItem.getItem());
-            String namePrefix = (taskItem.isImpt() ? Formatting.RED + "[重要] " : "") + (taskItem.isHard() ? Formatting.YELLOW + "[困难] " : "");
+            String namePrefix = (taskItem.isImpt() ? Formatting.YELLOW + "[重要] " : "") + (taskItem.isHard() ? Formatting.RED + "[困难] " : "");
             displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal(namePrefix + Formatting.WHITE + taskItem.getItem().getName().getString()));
 
             List<Text> lore = new ArrayList<>();
@@ -212,18 +212,13 @@ public class TaskItemListScreenHandler extends ScreenHandler {
             lore.add(Text.literal(Formatting.GRAY + taskItem.getItem().toString()));
             lore.add(Text.empty());
 
-            String playerName = player.getName().getString();
             if (taskItem.getPrincipals().isEmpty()) {
                 lore.add(Text.literal(Formatting.GOLD + "认领: " + Formatting.GRAY + "未认领"));
                 lore.add(Text.literal(Formatting.GRAY + "单击认领物品"));
             }
-            else if (taskItem.getPrincipals().contains(playerName)) {
+            else {
                 lore.add(Text.literal(Formatting.GOLD + "认领: " + Formatting.YELLOW + String.join(",", taskItem.getPrincipals())));
                 lore.add(Text.literal(Formatting.GRAY + "单击认领物品"));
-            }
-            else {
-                lore.add(Text.literal(Formatting.GOLD + "认领: " + Formatting.GREEN + "你"));
-                lore.add(Text.literal(Formatting.GRAY + "单击取消认领"));
             }
             displayStack.set(DataComponentTypes.LORE,new LoreComponent(lore));
 
