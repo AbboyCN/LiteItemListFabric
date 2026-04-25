@@ -19,7 +19,7 @@ public class TaskMember {
 
     public String getName() { return name; }
 
-    public MenuListStatus getListFilter() { return menuListStatus; }
+    public MenuListStatus getListStatus() { return menuListStatus; }
 
     public void setName(String name) { this.name = name; }
 
