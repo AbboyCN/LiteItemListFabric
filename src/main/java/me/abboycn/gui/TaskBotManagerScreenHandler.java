@@ -18,6 +18,8 @@ import net.minecraft.util.Formatting;
 
 import java.util.*;
 
+import static me.abboycn.gui.TaskItemListScreenHandler.openTaskItemListMenu;
+
 public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH THIS PART
     private static final ScreenHandlerType<GenericContainerScreenHandler> MENU_TYPE = ScreenHandlerType.GENERIC_9X4;
 
@@ -27,6 +29,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
     public static final int STORAGE_BOT_AREA_SIZE = STORAGE_BOT_AREA_END-STORAGE_BOT_AREA_START;
 
     private FilterType_Storage filterTypeStorage;
+    private FilterType_Online filterTypeOnline;
     private final ItemListTask task;
     private int currentPage = 0;
     private Collection<StorageBot> originalStorageBotList;
@@ -37,7 +40,10 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
     private enum FunctionType{
         PAST_PAGE,
         BACK,
+        NEWBOT,
+        SUMMONALL,
         FILTER_STORAGE,
+        FILTER_ONLINE,
         NEXT_PAGE
     }
 
@@ -47,16 +53,23 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
         FULL
     }
 
+    public enum FilterType_Online {
+        DEFAULT,
+        ONLINE,
+        OFFLINE
+    }
+
     public record StorageBot_ItemStack(StorageBot storageBot, ItemStack itemStack) { }
 
     public TaskBotManagerScreenHandler(int syncId, ServerPlayerEntity player, ItemListTask task){
         super(syncId, MENU_TYPE, 5000, player);
+        this.filterTypeStorage = FilterType_Storage.DEFAULT;
+        this.filterTypeOnline = FilterType_Online.DEFAULT;
         this.task = task;
         this.originalStorageBotList = task.getStorageBotManager().getBots();
-        this.upStageStorageBotList = originalStorageBotList;
+        this.upStageStorageBotList = getFilteredListFromOriginal(player);
         this.slotToFuncMap = new HashMap<>();
         this.slotToStorageBotMap = new HashMap<>();
-        this.filterTypeStorage = FilterType_Storage.DEFAULT;
         initMenuSlots();
         startAutoRefresh();
     }
@@ -81,14 +94,39 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
         menuInventory.setStack(1, backItem.getItemStack());
         slotToFuncMap.put(1, TaskBotManagerScreenHandler.FunctionType.BACK);
 
-        // [7] 筛选：已用空间
+        // [2] 新建假人
+        MenuFunctionItem newItem = new MenuFunctionItem(Items.NETHER_STAR, Text.literal(Formatting.YELLOW + "新建存储假人"), List.of(
+                Text.literal(Formatting.GRAY + "点击创建新的存储假人并召唤到自己的位置")
+        ));
+        menuInventory.setStack(2, newItem.getItemStack());
+        slotToFuncMap.put(2, TaskBotManagerScreenHandler.FunctionType.NEWBOT);
+
+        // [2] 召唤全部
+        MenuFunctionItem summonItem = new MenuFunctionItem(Items.PANDA_SPAWN_EGG, Text.literal(Formatting.YELLOW + "召唤全部假人"), List.of(
+                Text.literal(Formatting.GRAY + "点击召唤全部假人到自己的位置"),
+                Text.literal(Formatting.RED + "[!] " + Formatting.BOLD + "警告：请务必保证周边区域安全，大量假人同时召唤可能导致"),
+                Text.literal(Formatting.RED + "" + Formatting.BOLD + "玩家或假人被挤到不安全的位置，造成不必要的损失！")
+        ));
+        menuInventory.setStack(3, summonItem.getItemStack());
+        slotToFuncMap.put(3, TaskBotManagerScreenHandler.FunctionType.SUMMONALL);
+
+        // [6] 筛选：已用空间
         MenuFunctionItem filterItem_Storage = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + "筛选已用空间"), List.of(
                 Text.literal(filterTypeStorage == FilterType_Storage.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
                 Text.literal(filterTypeStorage == FilterType_Storage.HASSPACE ? Formatting.WHITE + "-> 空间未满" : Formatting.GRAY + "    空间未满"),
                 Text.literal(filterTypeStorage == FilterType_Storage.FULL ? Formatting.WHITE + "-> 空间已满" : Formatting.GRAY + "    空间已满")
         ));
-        menuInventory.setStack(7, filterItem_Storage.getItemStack());
-        slotToFuncMap.put(7, TaskBotManagerScreenHandler.FunctionType.FILTER_STORAGE);
+        menuInventory.setStack(6, filterItem_Storage.getItemStack());
+        slotToFuncMap.put(6, TaskBotManagerScreenHandler.FunctionType.FILTER_STORAGE);
+
+        // [7] 筛选：在线状态
+        MenuFunctionItem filterItem_Online = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + "筛选在线状态"), List.of(
+                Text.literal(filterTypeOnline == FilterType_Online.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
+                Text.literal(filterTypeOnline == FilterType_Online.ONLINE ? Formatting.WHITE + "-> 在线" : Formatting.GRAY + "    在线"),
+                Text.literal(filterTypeOnline == FilterType_Online.OFFLINE ? Formatting.WHITE + "-> 离线" : Formatting.GRAY + "    离线")
+        ));
+        menuInventory.setStack(7, filterItem_Online.getItemStack());
+        slotToFuncMap.put(7, TaskBotManagerScreenHandler.FunctionType.FILTER_ONLINE);
 
         // [8] 下一页
         MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "下一页 >>"), new ArrayList<>());
@@ -114,10 +152,10 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
             StorageBot bot = upStageStorageBotList.stream().toList().get(i);
 
             ItemStack displayStack = new ItemStack(Items.PLAYER_HEAD);
-            displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal((bot.getUsedStorage(player.server)>=41?Formatting.RED:Formatting.GREEN) + bot.getName()));
+            displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal((bot.isFull(player.server)?Formatting.RED:Formatting.GREEN) + bot.getName()));
             displayStack.set(DataComponentTypes.LORE, new LoreComponent(List.of(
                     Text.literal(bot.isOnline(player.server)?(Formatting.GREEN + "在线"):(Formatting.GRAY + "离线")),
-                    Text.literal(Formatting.GRAY + "已用：" + (bot.getUsedStorage(player.server)>=41?Formatting.RED:Formatting.GREEN) + bot.getUsedStorage(player.server)),
+                    Text.literal(Formatting.GRAY + "已用：" + (bot.isFull(player.server)?Formatting.RED:Formatting.GREEN) + bot.getUsedStorage(player.server) + " / 41"),
                     Text.empty(),
                     Text.literal(Formatting.GRAY + "点击召唤存储假人")
             )));
@@ -139,8 +177,29 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
         }
     }
 
+    private void updateStorageBotList(ServerPlayerEntity player) {
+        this.originalStorageBotList = task.getStorageBotManager().getBots();
+        this.upStageStorageBotList = getFilteredListFromOriginal(player);
+    }
+
+    @Override
     protected void executeAutoRefresh(){
+        updateStorageBotList(player);
         refreshGui();
+    }
+
+    private Collection<StorageBot> getFilteredListFromOriginal(ServerPlayerEntity player){
+        Collection<StorageBot> ret = switch (filterTypeStorage){
+            case DEFAULT -> originalStorageBotList;
+            case HASSPACE -> originalStorageBotList.stream().filter(s -> (!s.isFull(player.server))).toList();
+            case FULL ->  originalStorageBotList.stream().filter(s -> s.isFull(player.server)).toList();
+        };
+        ret = switch (filterTypeOnline){
+            case DEFAULT -> ret;
+            case ONLINE -> ret.stream().filter(s -> s.isOnline(player.server)).toList();
+            case OFFLINE -> ret.stream().filter(s -> (!s.isOnline(player.server))).toList();
+        };
+        return ret;
     }
 
     @Override
@@ -174,6 +233,11 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
     private void handleMultiFunctionClick(ServerPlayerEntity player, TaskBotManagerScreenHandler.FunctionType funcType) {
         switch (funcType) {
             case PAST_PAGE -> toPastPage(player);                   // 上一页
+            case BACK -> backToSuperMenu(player);                   // 返回上一级
+            case NEWBOT -> newBot(player);                          // 新建假人
+            case SUMMONALL -> spawnAll(player);                     // 召唤全部
+            case FILTER_STORAGE -> filterStorage(player);           // 筛选存储空间
+            case FILTER_ONLINE -> filterOnline(player);             // 筛选在线状态
             case NEXT_PAGE -> toNextPage(player);                   // 下一页
         }
     }
@@ -187,6 +251,44 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
         }
         currentPage--;
         refreshGui();
+    }
+
+    // 返回上一级
+    private void backToSuperMenu(ServerPlayerEntity player) {
+        openTaskItemListMenu(player, task);
+    }
+
+    // 新建假人
+    private void newBot(ServerPlayerEntity player) {
+        task.getStorageBotManager().newBot().playerSummonFake(player);
+    }
+
+    // 召唤全部
+    private void spawnAll(ServerPlayerEntity player) {
+        task.getStorageBotManager().summonAllBots(player);
+    }
+
+    // 切换筛选
+    private void filterStorage(ServerPlayerEntity player) {
+        filterTypeStorage = switch(filterTypeStorage){
+            case DEFAULT -> FilterType_Storage.HASSPACE;
+            case HASSPACE -> FilterType_Storage.FULL;
+            case FULL -> FilterType_Storage.DEFAULT;
+        };
+        upStageStorageBotList=getFilteredListFromOriginal(player);
+        refreshGui();
+        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+    }
+
+    private void filterOnline(ServerPlayerEntity player) {
+        filterTypeOnline = switch(filterTypeOnline){
+            case DEFAULT -> FilterType_Online.ONLINE;
+            case ONLINE -> FilterType_Online.OFFLINE;
+            case OFFLINE -> FilterType_Online.DEFAULT;
+        };
+        upStageStorageBotList=getFilteredListFromOriginal(player);
+        refreshGui();
+        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
     }
 
     // 下一页

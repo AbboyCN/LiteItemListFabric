@@ -57,12 +57,12 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
 
     public TaskItemListScreenHandler(int syncId, ServerPlayerEntity player, ItemListTask task, MenuListStatus status) {
         super(syncId, MENU_TYPE, 3000, player);
-        this.task = task;
-        this.slotToFuncMap = new HashMap<>();
-        this.slotToTaskItemMap = new HashMap<>();
         this.filterTypeClime = status.filterTypeClime;
         this.filterTypeFinished = status.filterTypeFinished;
         this.filterTypeMark = status.filterTypeMark;
+        this.task = task;
+        this.slotToFuncMap = new HashMap<>();
+        this.slotToTaskItemMap = new HashMap<>();
         this.currentPage = status.page;
         this.originalTaskList = task.getItemList().getTaskItems();
         this.upStageTaskItemList = getFilteredListFromOriginal();
@@ -94,7 +94,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         slotToFuncMap.put(2, TaskItemListScreenHandler.FunctionType.REFRESH_LIST);
 
         // [3] 存储假人管理
-        MenuFunctionItem botManagerItem = new MenuFunctionItem(Items.PANDA_SPAWN_EGG, Text.literal(Formatting.YELLOW + "管理存储假人"), new ArrayList<>());
+        MenuFunctionItem botManagerItem = new MenuFunctionItem(Items.PLAYER_HEAD, Text.literal(Formatting.YELLOW + "管理存储假人"), new ArrayList<>());
         menuInventory.setStack(3, botManagerItem.getItemStack());
         slotToFuncMap.put(3, TaskItemListScreenHandler.FunctionType.MANAGE_BOT);
 

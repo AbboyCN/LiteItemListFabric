@@ -133,6 +133,10 @@ public class StorageBot {
         return emptySlots;
     }
 
+    public boolean isFull(MinecraftServer server) {
+        return getUsedStorage(server)>=41;
+    }
+
     public boolean isOnline(MinecraftServer server) {
         return server.getPlayerManager().getPlayer(this.m_name)!=null;
     }

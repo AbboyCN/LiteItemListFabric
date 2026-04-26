@@ -27,4 +27,6 @@ public class CMDBotNew {
         player.sendMessage(Text.literal("§a已创建并召唤新的存储假人."));
         return 1;
     }
+
+
 }

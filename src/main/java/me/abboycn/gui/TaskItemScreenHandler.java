@@ -114,8 +114,8 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
     }
 
     // 返回上一级
-    private void backToSuperMenu(PlayerEntity player) {
-        openTaskItemListMenu((ServerPlayerEntity) player, task);
+    private void backToSuperMenu(ServerPlayerEntity player) {
+        openTaskItemListMenu(player, task);
     }
 
     // 刷新列表
