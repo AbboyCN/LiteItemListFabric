@@ -8,6 +8,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Timer;
@@ -71,6 +75,10 @@ public class ItemListTask {
 
     public Long getTime() {
         return m_time;
+    }
+
+    public String getFormattedTime() {
+        return LocalDateTime.ofInstant(Instant.ofEpochMilli(m_time), ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
     public TaskStorageBotManager getStorageBotManager() {

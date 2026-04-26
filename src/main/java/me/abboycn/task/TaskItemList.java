@@ -73,6 +73,14 @@ public class TaskItemList {
         return taskItems.size();
     }
 
+    public int getFinishedCount() {
+        int ret = 0;
+        for(TaskItem taskItem : taskItems) {
+            if(taskItem.isFinished()) ret++;
+        }
+        return ret;
+    }
+
     public void setName(String name) {
         this.name = name;
     }

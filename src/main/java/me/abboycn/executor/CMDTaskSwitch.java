@@ -10,9 +10,11 @@ import net.minecraft.text.Text;
 
 public class CMDTaskSwitch {
     public static int CMDTaskSwitchExecutor(CommandContext<ServerCommandSource> context){
-        ServerPlayerEntity player = context.getSource().getPlayer();
+        return executeOperation(context.getSource().getPlayer(), LiteItemListFabric.taskManager.getTask(StringArgumentType.getString(context, "project")));
+    }
+
+    public static int executeOperation(ServerPlayerEntity player, ItemListTask task){
         if(player==null){return 0;}
-        ItemListTask task = LiteItemListFabric.taskManager.getTask(StringArgumentType.getString(context, "project"));
         if(task==null||task.getCreator()==null){
             player.sendMessage(Text.literal("§c未知的任务,请检查拼写或使用/liteitemlist task list查看任务列表!"));
             return 0;

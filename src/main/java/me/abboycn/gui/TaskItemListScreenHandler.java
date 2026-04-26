@@ -23,6 +23,7 @@ import java.util.List;
 
 import static me.abboycn.gui.TaskBotManagerScreenHandler.openTaskBotManagerMenu;
 import static me.abboycn.gui.TaskItemScreenHandler.openTaskItemMenu;
+import static me.abboycn.gui.TaskManagerScreenHandler.openTaskManagerMenu;
 
 public class TaskItemListScreenHandler extends LiteItemListMenu {
     public static final ScreenHandlerType<GenericContainerScreenHandler> MENU_TYPE = ScreenHandlerType.GENERIC_9X6;
@@ -44,6 +45,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
 
     private enum FunctionType {
         PAST_PAGE,
+        BACK,
         INFO_OVERVIEW,
         REFRESH_LIST,
         MANAGE_BOT,
@@ -85,6 +87,11 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         menuInventory.setStack(0, pastPageItem.getItemStack());
         slotToFuncMap.put(0, TaskItemListScreenHandler.FunctionType.PAST_PAGE);
 
+        // [1] 单击返回
+        MenuFunctionItem backItem = new MenuFunctionItem(Items.SPECTRAL_ARROW, Text.literal(Formatting.GOLD + "<= 返回任务管理面板"), new ArrayList<>());
+        menuInventory.setStack(1, backItem.getItemStack());
+        slotToFuncMap.put(1, TaskItemListScreenHandler.FunctionType.BACK);
+
         // [2] 刷新列表
         MenuFunctionItem refreshItem = new MenuFunctionItem(Items.PAPER, Text.literal(Formatting.YELLOW + "刷新列表"), List.of(
                 Text.literal(Formatting.GRAY + "点击刷新物品列表"),
@@ -99,7 +106,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         slotToFuncMap.put(3, TaskItemListScreenHandler.FunctionType.MANAGE_BOT);
 
         // [4] 信息总览
-        MenuFunctionItem infoItem = new MenuFunctionItem(Items.BOOK, Text.literal(Formatting.BLUE + task.getName()), List.of(
+        MenuFunctionItem infoItem = new MenuFunctionItem(Items.BOOK, Text.literal(Formatting.AQUA + task.getName()), List.of(
                 Text.literal(Formatting.GRAY + "点击查看物品统计信息"),
                 Text.literal(Formatting.GRAY + "物品项数: " + upStageTaskItemList.size())
         ));
@@ -282,6 +289,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
     private void handleMultiFunctionClick(ServerPlayerEntity player, FunctionType funcType) {
         switch (funcType) {
             case PAST_PAGE -> toPastPage(player);                   // 上一页
+            case BACK -> backToSuperMenu(player);                   // 返回至上级菜单
             case INFO_OVERVIEW -> sendInfoOverview(player);         // 信息总览
             case REFRESH_LIST -> refreshTaskItemList(player);       // 刷新列表
             case MANAGE_BOT -> manageStorageBot(player);            // 管理存储假人
@@ -304,6 +312,12 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         refreshGui();
     }
 
+    // 返回到上一级
+    private void backToSuperMenu(ServerPlayerEntity player) {
+        player.closeHandledScreen();
+        openTaskManagerMenu(player);
+    }
+
     // 信息总览
     private void sendInfoOverview(ServerPlayerEntity player) {
         player.closeHandledScreen();
@@ -316,8 +330,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
 
     // 刷新列表
     private void refreshTaskItemList(ServerPlayerEntity player) {
-        updateTaskItemList();
-        refreshGui();
+        executeAutoRefresh();
         player.sendMessage(Text.literal(Formatting.GREEN + "列表已刷新！"), true);
     }
 
@@ -335,8 +348,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
             case UNCLIMED -> MenuListStatus.FilterType_Clime.DEFAULT;
         };
         task.getMember(player).getListStatus().filterTypeClime=filterTypeClime;
-        upStageTaskItemList=getFilteredListFromOriginal();
-        refreshGui();
+        executeAutoRefresh();
         player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
     }
 
@@ -349,8 +361,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
             case FINISHED -> MenuListStatus.FilterType_Finished.DEFAULT;
         };
         task.getMember(player).getListStatus().filterTypeFinished=filterTypeFinished;
-        upStageTaskItemList=getFilteredListFromOriginal();
-        refreshGui();
+        executeAutoRefresh();
         player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
     }
 
@@ -362,8 +373,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
             case HARD -> MenuListStatus.FilterType_Mark.DEFAULT;
         };
         task.getMember(player).getListStatus().filterTypeMark=filterTypeMark;
-        upStageTaskItemList=getFilteredListFromOriginal();
-        refreshGui();
+        executeAutoRefresh();
         player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
     }
 

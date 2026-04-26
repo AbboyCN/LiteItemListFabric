@@ -59,7 +59,7 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
         slotToFuncMap.put(2, TaskItemScreenHandler.FunctionType.REFRESH_LIST);
 
         // [4] 信息
-        MenuFunctionItem infoItem = new MenuFunctionItem(item.getItem(), Text.literal(Formatting.BLUE + item.getItem().getName().getString()), item.getItemInfo());
+        MenuFunctionItem infoItem = new MenuFunctionItem(item.getItem(), Text.literal(Formatting.AQUA + item.getItem().getName().getString()), item.getItemInfo());
         menuInventory.setStack(4, infoItem.getItemStack());
         slotToFuncMap.put(4, TaskItemScreenHandler.FunctionType.INFO_OVERVIEW);
 

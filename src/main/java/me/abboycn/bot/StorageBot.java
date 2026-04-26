@@ -1,7 +1,11 @@
 package me.abboycn.bot;
 
 import carpet.patches.EntityPlayerMPFake;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -131,6 +135,15 @@ public class StorageBot {
             }
         }
         return emptySlots;
+    }
+
+    public ItemStack getHead(MinecraftServer server) {
+        ItemStack ret = new ItemStack(Items.PLAYER_HEAD);
+        ServerPlayerEntity player = getPlayer(server);
+        if(player != null) {
+            ret.set(DataComponentTypes.PROFILE, new ProfileComponent(player.getGameProfile()));
+        }
+        return ret;
     }
 
     public boolean isFull(MinecraftServer server) {

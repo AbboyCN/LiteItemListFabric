@@ -20,7 +20,7 @@ import java.util.*;
 
 import static me.abboycn.gui.TaskItemListScreenHandler.openTaskItemListMenu;
 
-public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH THIS PART
+public class TaskBotManagerScreenHandler extends LiteItemListMenu{
     private static final ScreenHandlerType<GenericContainerScreenHandler> MENU_TYPE = ScreenHandlerType.GENERIC_9X4;
 
     private static final int FUNCTION_AREA_END = 9;
@@ -151,7 +151,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
         for(int i = currentPage*STORAGE_BOT_AREA_SIZE; i<Integer.min((currentPage+1)*STORAGE_BOT_AREA_SIZE, upStageStorageBotList.size()); i++){
             StorageBot bot = upStageStorageBotList.stream().toList().get(i);
 
-            ItemStack displayStack = new ItemStack(Items.PLAYER_HEAD);
+            ItemStack displayStack = bot.getHead(player.server);
             displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal((bot.isFull(player.server)?Formatting.RED:Formatting.GREEN) + bot.getName()));
             displayStack.set(DataComponentTypes.LORE, new LoreComponent(List.of(
                     Text.literal(bot.isOnline(player.server)?(Formatting.GREEN + "在线"):(Formatting.GRAY + "离线")),
@@ -261,11 +261,13 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
     // 新建假人
     private void newBot(ServerPlayerEntity player) {
         task.getStorageBotManager().newBot().playerSummonFake(player);
+        executeAutoRefresh();
     }
 
     // 召唤全部
     private void spawnAll(ServerPlayerEntity player) {
         task.getStorageBotManager().summonAllBots(player);
+        executeAutoRefresh();
     }
 
     // 切换筛选
@@ -275,8 +277,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
             case HASSPACE -> FilterType_Storage.FULL;
             case FULL -> FilterType_Storage.DEFAULT;
         };
-        upStageStorageBotList=getFilteredListFromOriginal(player);
-        refreshGui();
+        executeAutoRefresh();
         player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
     }
 
@@ -286,8 +287,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{//TODO:FINISH 
             case ONLINE -> FilterType_Online.OFFLINE;
             case OFFLINE -> FilterType_Online.DEFAULT;
         };
-        upStageStorageBotList=getFilteredListFromOriginal(player);
-        refreshGui();
+        executeAutoRefresh();
         player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
     }
 
