@@ -3,6 +3,7 @@ package me.abboycn.task;
 import com.google.gson.annotations.SerializedName;
 import me.abboycn.bot.StorageBot;
 import me.abboycn.bot.TaskStorageBotManager;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -12,6 +13,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class TaskItemList {
     @SerializedName("project")
@@ -99,9 +101,18 @@ public class TaskItemList {
         for(StorageBot bot : botManager.getBots()){
             bot.refreshInventory(server);
             Inventory inventory = bot.getInventory();
-            for(int i=0;i<inventory.size();i++) {
-                ItemStack itemStack = inventory.getStack(i);
-                taskItems.stream().filter(taskItem -> taskItem.getItem().equals(itemStack.getItem())).findFirst().ifPresent(item -> item.addAvailable(itemStack.getCount()));
+            for(TaskItem taskItem : taskItems) {
+                for(int i=0; i<inventory.size(); i++){
+                    if(inventory.getStack(i).getItem().equals(taskItem.getItem())){
+                        taskItem.addAvailable(inventory.getStack(i).getCount());
+                    }
+                    else if(inventory.getStack(i).contains(DataComponentTypes.CONTAINER)){
+                        taskItem.addAvailable(Objects.requireNonNull(inventory.getStack(i).get(DataComponentTypes.CONTAINER)).stream()
+                                .filter(innerStack -> innerStack.isOf(taskItem.getItem()))
+                                .mapToInt(ItemStack::getCount)
+                                .sum());
+                    }
+                }
             }
         }
     }

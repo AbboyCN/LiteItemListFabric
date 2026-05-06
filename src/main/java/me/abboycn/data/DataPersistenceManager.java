@@ -31,9 +31,8 @@ public class DataPersistenceManager {
 
     public static void saveTasks() {
         try (FileWriter writer = new FileWriter(TASKS_FILE)) {
-            TaskManager taskManager = LiteItemListFabric.taskManager;
-            GSON.toJson(taskManager.getTasks(), writer);
-            LiteItemListFabric.LOGGER.info("Successfully saved data for {} task(s).", taskManager.getTasks().size());
+            GSON.toJson(LiteItemListFabric.taskManager, writer);
+            LiteItemListFabric.LOGGER.info("Successfully saved data for {} task(s).", LiteItemListFabric.taskManager.getTasks().size());
         } catch (IOException e) {
             LiteItemListFabric.LOGGER.error("failed to save task data:", e);
         }
@@ -44,18 +43,9 @@ public class DataPersistenceManager {
         if (!file.exists()) return;
 
         try (FileReader reader = new FileReader(file)) {
-            ItemListTask[] tasks = GSON.fromJson(reader, ItemListTask[].class);
-            TaskManager taskManager = LiteItemListFabric.taskManager;
-
-            taskManager.getTasks().clear();
-            for (ItemListTask task : tasks) {
-                task.startAutoRefreshStorage(server);
-                taskManager.getTasks().add(task);
-                if (task.getStorageBotManager() == null) {
-                    task.setBotManager(new TaskStorageBotManager(task.getName()));
-                }
-            }
-            LiteItemListFabric.LOGGER.info("loaded {} task(s) from saved data.", tasks.length);
+            LiteItemListFabric.taskManager.getTasks().clear();
+            LiteItemListFabric.taskManager = GSON.fromJson(reader, TaskManager.class);
+            LiteItemListFabric.LOGGER.info("loaded {} task(s) from saved data.", LiteItemListFabric.taskManager.getTasks().size());
         } catch (IOException e) {
             LiteItemListFabric.LOGGER.error("failed to load task data:", e);
         }

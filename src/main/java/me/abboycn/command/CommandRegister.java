@@ -60,7 +60,10 @@ public class CommandRegister {
                 .then(CommandManager.literal("chat")
                         .then(CommandManager.argument("message", StringArgumentType.greedyString())
                                 .executes(CMDChat::CMDChatExecutor)))
-                .then(CommandManager.literal("reload"))
+                .then(CommandManager.literal("reload")
+                        .executes(CMDReload::CMDReloadExecutor)
+                        .then(CommandManager.literal("-force")
+                                .executes(CMDReload::CMDForceReloadExecutor)))
         );
     }
 }

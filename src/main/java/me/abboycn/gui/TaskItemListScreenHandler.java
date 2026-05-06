@@ -83,7 +83,9 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         slotToFuncMap = new HashMap<>();
 
         // [0] 上一页
-        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "<< 上一页"), new ArrayList<>());
+        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "<< 上一页"), List.of(
+                Text.literal(Formatting.GRAY + "当前第 " + (currentPage+1) + " / " + (upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE+1) + " 页")
+        ));
         menuInventory.setStack(0, pastPageItem.getItemStack());
         slotToFuncMap.put(0, TaskItemListScreenHandler.FunctionType.PAST_PAGE);
 
@@ -144,7 +146,9 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         slotToFuncMap.put(7, TaskItemListScreenHandler.FunctionType.FILTER_MARK);
 
         // [8] 下一页
-        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "下一页 >>"), new ArrayList<>());
+        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "下一页 >>"), List.of(
+                Text.literal(Formatting.GRAY + "当前第 " + (currentPage+1) + " / " + (upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE+1) + " 页")
+        ));
         menuInventory.setStack(8, nextPageItem.getItemStack());
         slotToFuncMap.put(8, TaskItemListScreenHandler.FunctionType.NEXT_PAGE);
 
@@ -179,7 +183,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
                 int box = (taskItem.getAmount()-taskItem.getAvailable())/1728;
                 int stack = (taskItem.getAmount()-taskItem.getAvailable()-1728*box)/64;
                 int single = (taskItem.getAmount()-taskItem.getAvailable())%64;
-                lore.add(Text.literal(Formatting.GRAY + "还需: " + (box!=0?box+"盒 ":"") + (stack!=0?stack+"组 ":"") + (single!=0?single+"个":"") + " (" + taskItem.getAmount() + "个)"));
+                lore.add(Text.literal(Formatting.GRAY + "还需: " + (box!=0?box+"盒 ":"") + (stack!=0?stack+"组 ":"") + (single!=0?single+"个":"") + " (" + (taskItem.getAmount()-taskItem.getAvailable()) + "个)"));
             }
 
             lore.add(Text.literal(Formatting.GRAY + "备注: " + (taskItem.isHard() ? "困难 " : "") + (taskItem.isImpt() ? "重要 " : "")));
@@ -188,7 +192,8 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
             lore.add(Text.empty());
 
             lore.add(Text.literal(Formatting.GOLD + "认领: " + (taskItem.getPrincipals().isEmpty()?(Formatting.GRAY + "未认领"):(Formatting.YELLOW + String.join(",", taskItem.getPrincipals())))));
-            lore.add(Text.literal(Formatting.GRAY + "单击认领物品" + (taskItem.getPrincipals().contains(player.getName().getString())?"单击取消认领物品":"单击认领物品")));
+            lore.add(Text.literal(Formatting.AQUA + "[单击] " + Formatting.GRAY + (taskItem.getPrincipals().contains(player.getName().getString())?"取消认领物品":"认领物品")));
+            lore.add(Text.literal(Formatting.AQUA + "[Shift+单击] " + Formatting.GRAY + "打开物品属性"));
 
             displayStack.set(DataComponentTypes.LORE,new LoreComponent(lore));
 
@@ -247,7 +252,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         };
         ret = switch (filterTypeMark) {
             case DEFAULT -> ret;
-            case IMPTORHARD -> ret.stream().filter(t -> t.isHard()&&t.isImpt()).toList();
+            case IMPTORHARD -> ret.stream().filter(t -> t.isHard()||t.isImpt()).toList();
             case IMPT -> ret.stream().filter(TaskItem::isImpt).toList();
             case HARD -> ret.stream().filter(TaskItem::isHard).toList();
         };

@@ -2,6 +2,7 @@ package me.abboycn.gui;
 
 import me.abboycn.task.ItemListTask;
 import me.abboycn.task.TaskItem;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -59,8 +60,9 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
         slotToFuncMap.put(2, TaskItemScreenHandler.FunctionType.REFRESH_LIST);
 
         // [4] 信息
-        MenuFunctionItem infoItem = new MenuFunctionItem(item.getItem(), Text.literal(Formatting.AQUA + item.getItem().getName().getString()), item.getItemInfo());
-        menuInventory.setStack(4, infoItem.getItemStack());
+        ItemStack infoItem = new ItemStack(item.getItem());
+        infoItem.set(DataComponentTypes.LORE, Objects.requireNonNull(infoItem.get(DataComponentTypes.LORE)).with(Text.literal("点击获取更多信息")));
+        menuInventory.setStack(4, infoItem);
         slotToFuncMap.put(4, TaskItemScreenHandler.FunctionType.INFO_OVERVIEW);
 
         // [6] 切换重要

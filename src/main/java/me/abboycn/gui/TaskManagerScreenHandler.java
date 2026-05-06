@@ -114,8 +114,9 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
                     Text.empty(),
                     Text.literal(Formatting.GRAY + "进度：" + task.getItemList().getFinishedCount() + "/" + task.getItemList().getTaskItemCount() + " (" + ((task.getItemList().getTaskItemCount()==0)?"0":BigDecimal.valueOf(task.getItemList().getFinishedCount()/(double)task.getItemList().getTaskItemCount()*100).setScale(2, RoundingMode.HALF_UP)) + "%)"),
                     Text.empty(),
-                    Text.literal(Formatting.GRAY + (task.containsMember(player)?"点击退出任务":"点击加入任务")),
-                    Text.literal(Formatting.GRAY + (task.containsMember(player)?"Shift+点击打开任务物品列表":""))
+                    Text.literal((task.containsMember(player)?(Formatting.AQUA + "[点击]" + Formatting.GRAY + "切换任务"):"")),
+                    Text.literal((task.containsMember(player)?(Formatting.AQUA + "[Shift+点击]" + Formatting.GRAY + "打开任务物品列表"):"")),
+                    Text.literal(Formatting.AQUA + "[丢弃]" + Formatting.GRAY + (task.containsMember(player)?"退出任务":"加入任务"))
             )));
             if(LiteItemListFabric.taskManager.getTaskByPlayer(player)!=null&&LiteItemListFabric.taskManager.getTaskByPlayer(player).equals(task)){
                 displayStack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE,true);
@@ -177,7 +178,7 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
             return;
         }
 
-        // 物品展示区
+        // 任务展示区
         ItemListTask task = slotToTaskMap.get(slotIndex);
         if (task != null) {
             handleTaskClick(serverPlayer, task, actionType);
@@ -230,14 +231,12 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
     // 处理物品展示区点击
     private void handleTaskClick(ServerPlayerEntity player, ItemListTask task, SlotActionType actionType) {
         if (actionType == SlotActionType.PICKUP) {
-            if (task.containsMember(player)) {
-                player.getCommandTags().removeIf(tag -> tag.contains("in_task_"));
-                task.removeMember(player);
+            if(!task.containsMember(player)){
+                player.sendMessage(Text.literal("§c你未参与此任务!"),true);
+                return;
             }
-            else {
-                player.addCommandTag(task.getTaskCommandTag());
-                task.addMember(player);
-            }
+            player.getCommandTags().removeIf(tag -> tag.contains("in_task_"));
+            player.getCommandTags().add(task.getTaskCommandTag());
         }
         else if (actionType == SlotActionType.QUICK_MOVE) {
             if (task.containsMember(player)) {
@@ -249,6 +248,16 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
             }
             else {
                 player.sendMessage(Text.literal(Formatting.RED+"请先加入该任务!"));
+            }
+        }
+        else if (actionType == SlotActionType.THROW) {
+            if (task.containsMember(player)) {
+                player.getCommandTags().removeIf(tag -> tag.contains("in_task_"));
+                task.removeMember(player);
+            }
+            else {
+                player.addCommandTag(task.getTaskCommandTag());
+                task.addMember(player);
             }
         }
         refreshGui();

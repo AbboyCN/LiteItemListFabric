@@ -1,5 +1,6 @@
 package me.abboycn.task;
 
+import com.google.gson.annotations.SerializedName;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
@@ -7,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class TaskManager {
+    @SerializedName("tasks")
     private Collection<ItemListTask> m_tasks = new ArrayList<>();
+    @SerializedName("nextId")
     private int nextId = 0;
 
     public TaskManager() {
@@ -15,6 +18,10 @@ public class TaskManager {
 
     public TaskManager(Collection<ItemListTask> tasks) {
         this.m_tasks = tasks;
+    }
+
+    public void setNextId(int nextId) {
+        this.nextId = nextId;
     }
 
     public boolean checkTaskExist(String name) {
