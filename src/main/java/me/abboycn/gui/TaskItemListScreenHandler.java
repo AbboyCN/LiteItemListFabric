@@ -274,7 +274,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         if (slotIndex < FUNCTION_AREA_END) {
             FunctionType funcType = slotToFuncMap.get(slotIndex); // 从映射获取功能类型
             if (funcType != null) {
-                handleMultiFunctionClick(serverPlayer, funcType); // 处理对应功能
+                handleMultiFunctionClick(serverPlayer, funcType, actionType); // 处理对应功能
             }
             return;
         }
@@ -291,17 +291,19 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
     }
 
     // 处理功能区点击
-    private void handleMultiFunctionClick(ServerPlayerEntity player, FunctionType funcType) {
-        switch (funcType) {
-            case PAST_PAGE -> toPastPage(player);                   // 上一页
-            case BACK -> backToSuperMenu(player);                   // 返回至上级菜单
-            case INFO_OVERVIEW -> sendInfoOverview(player);         // 信息总览
-            case REFRESH_LIST -> refreshTaskItemList(player);       // 刷新列表
-            case MANAGE_BOT -> manageStorageBot(player);            // 管理存储假人
-            case FILTER_UNCLAIMED -> filterUnclaimedItems(player);  // 筛选认领状态
-            case FILTER_FINISHED -> filterFinishedItems(player);    // 筛选完成状态
-            case FILTER_MARK -> filterMarkItems(player);            // 筛选物品标记
-            case NEXT_PAGE -> toNextPage(player);                   // 下一页
+    private void handleMultiFunctionClick(ServerPlayerEntity player, FunctionType funcType, SlotActionType actionType) {
+        if(actionType == SlotActionType.PICKUP){
+            switch (funcType) {
+                case PAST_PAGE -> toPastPage(player);                   // 上一页
+                case BACK -> backToSuperMenu(player);                   // 返回至上级菜单
+                case INFO_OVERVIEW -> sendInfoOverview(player);         // 信息总览
+                case REFRESH_LIST -> refreshTaskItemList(player);       // 刷新列表
+                case MANAGE_BOT -> manageStorageBot(player);            // 管理存储假人
+                case FILTER_UNCLAIMED -> filterUnclaimedItems(player);  // 筛选认领状态
+                case FILTER_FINISHED -> filterFinishedItems(player);    // 筛选完成状态
+                case FILTER_MARK -> filterMarkItems(player);            // 筛选物品标记
+                case NEXT_PAGE -> toNextPage(player);                   // 下一页
+            }
         }
     }
 
@@ -409,7 +411,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
             player.closeHandledScreen();
             openTaskItemMenu(player,task,targetItem);
         }
-        refreshGui();
+        executeAutoRefresh();
     }
 
     // 打开菜单
