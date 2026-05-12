@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import me.abboycn.LiteItemListFabric;
 import me.abboycn.task.TaskManager;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.server.MinecraftServer;
 
 import java.io.File;
 import java.io.FileReader;
@@ -36,7 +35,7 @@ public class DataPersistenceManager {
         }
     }
 
-    public static void loadTasks(MinecraftServer server) {
+    public static void loadTasks() {
         File file = new File(TASKS_FILE);
         if (!file.exists()) return;
 

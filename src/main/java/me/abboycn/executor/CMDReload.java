@@ -27,7 +27,7 @@ public class CMDReload {
             if(!isForce){
                 DataPersistenceManager.saveTasks();
             }
-            DataPersistenceManager.loadTasks(player.server);
+            DataPersistenceManager.loadTasks();
             LitematicaReader.refreshFileList();
             player.sendMessage(Text.literal(Formatting.GREEN + "已" + (isForce?"强制":"") + "重载所有任务!"));
             return 1;
