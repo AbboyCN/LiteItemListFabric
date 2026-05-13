@@ -6,11 +6,9 @@ import me.abboycn.gui.MenuListStatus;
 
 public class TaskMember {
     @SerializedName("name")
-    private String name;
+    private final String name;
     @SerializedName("menuListStatus")
     private MenuListStatus menuListStatus;
-
-    public TaskMember(){}
 
     public TaskMember(String name, MenuListStatus menuListStatus) {
         this.name = name;
@@ -20,8 +18,6 @@ public class TaskMember {
     public String getName() { return name; }
 
     public MenuListStatus getListStatus() { return menuListStatus; }
-
-    public void setName(String name) { this.name = name; }
 
     public void setListFilter(MenuListStatus menuListStatus) { this.menuListStatus = menuListStatus; }
 }

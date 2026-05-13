@@ -134,12 +134,14 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
 
     // 切换困难
     private void switchHard(ServerPlayerEntity player) {
+        player.sendMessage(Text.literal(Formatting.GREEN + "切换成功"), true);
         item.setHard(!item.isHard());
         refreshGui();
     }
 
     // 切换重要
     private void switchImpt(ServerPlayerEntity player) {
+        player.sendMessage(Text.literal(Formatting.GREEN + "切换成功"), true);
         item.setImpt(!item.isImpt());
         refreshGui();
     }

@@ -13,12 +13,7 @@ public class TaskManager {
     @SerializedName("nextId")
     private int nextId = 0;
 
-    public TaskManager() {
-    }
-
-    public TaskManager(Collection<ItemListTask> tasks) {
-        this.m_tasks = tasks;
-    }
+    public TaskManager() {}
 
     public void setNextId(int nextId) {
         this.nextId = nextId;
