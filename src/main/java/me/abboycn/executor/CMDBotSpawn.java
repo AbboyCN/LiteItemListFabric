@@ -5,10 +5,10 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import me.abboycn.LiteItemListFabric;
 import me.abboycn.bot.StorageBot;
+import me.abboycn.resource.LangProvider;
 import me.abboycn.task.ItemListTask;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 
 public class CMDBotSpawn {
     public static int CMDBotSpawnExecutor(CommandContext<ServerCommandSource> context, boolean spawnAll) {
@@ -18,11 +18,11 @@ public class CMDBotSpawn {
         }
         ItemListTask task = LiteItemListFabric.taskManager.getTask(StringArgumentType.getString(context, "project"));
         if (task == null || task.getCreator() == null) {
-            player.sendMessage(Text.literal("§c未知的任务,请检查拼写或使用/liteitemlist task list查看任务列表!"));
+            player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.error.unknown_task"));
             return 0;
         }
         if (!task.containsMember(player)) {
-            player.sendMessage(Text.literal("§c你未参与此任务!"));
+            player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.error.not_in_task"));
             return 0;
         }
         if (spawnAll) {
@@ -32,7 +32,7 @@ public class CMDBotSpawn {
         int id = IntegerArgumentType.getInteger(context, "id");
         StorageBot bot = task.getStorageBotManager().getBot(id);
         if (bot == null) {
-            player.sendMessage(Text.literal("§c假人id不存在!"));
+            player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.bot.spawn.unknown_id"));
             return 0;
         }
         bot.playerSummonFake(player);

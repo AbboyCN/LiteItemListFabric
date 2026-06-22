@@ -11,6 +11,8 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -75,12 +77,32 @@ public class TaskItemList {
         return taskItems.size();
     }
 
+    public int getImptCount() {
+        return (int)taskItems.stream().filter(TaskItem::isImpt).count();
+    }
+
+    public int getHardCount() {
+        return (int)taskItems.stream().filter(TaskItem::isHard).count();
+    }
+
     public int getFinishedCount() {
-        int ret = 0;
-        for(TaskItem taskItem : taskItems) {
-            if(taskItem.isFinished()) ret++;
-        }
-        return ret;
+        return (int)taskItems.stream().filter(TaskItem::isFinished).count();
+    }
+
+    public int getUnclaimedCount() {
+        return (int)taskItems.stream().filter(taskItem -> taskItem.getPrincipals().isEmpty()).count();
+    }
+
+    public int getOngoingCount() {
+        return (int)taskItems.stream().filter(taskItem -> taskItem.getAvailable()>0&&!taskItem.isFinished()).count();
+    }
+
+    public int getNotStartCount() {
+        return (int)taskItems.stream().filter(taskItem -> taskItem.getAvailable()==0).count();
+    }
+
+    public BigDecimal getProgressPercentage() {
+        return ((taskItems.isEmpty())?BigDecimal.valueOf(0): BigDecimal.valueOf(getFinishedCount()/(double)taskItems.size()*100).setScale(2, RoundingMode.HALF_UP));
     }
 
     public void setName(String name) {

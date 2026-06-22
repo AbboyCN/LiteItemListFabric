@@ -1,6 +1,7 @@
 package me.abboycn.task;
 
 import com.google.gson.annotations.SerializedName;
+import me.abboycn.resource.LangProvider;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
@@ -84,7 +85,7 @@ public class TaskItem {
         isImpt = impt;
     }
 
-    public boolean isFinished() {return available>amount;}
+    public boolean isFinished() {return available>=amount;}
 
     public String getMsg() {
         return msg;
@@ -100,11 +101,13 @@ public class TaskItem {
 
     public List<Text> getItemInfo() {
         List<Text> ret = new ArrayList<>();
-        ret.add(Text.literal(getItem().getName().getString()));
-        ret.add(Text.literal(Formatting.GRAY + "数量: " + available + "/" + amount));
-        ret.add(Text.literal((isHard?Formatting.RED+"困难 ":"")+ (isImpt?Formatting.GOLD+"重要 ":"")));
+        ret.add(Text.literal(Formatting.AQUA + getItem().getName().getString()));
+        ret.add(LangProvider.get("msg.liteitemlist.gui.taskitem.count",available,amount));
+        ret.add(LangProvider.get("msg.liteitemlist.gui.taskitem.marker").copy()
+                .append(isImpt?LangProvider.get("gui.liteitemlist.itemlist.element.name.impt"):Text.empty())
+                .append(isHard?LangProvider.get("gui.liteitemlist.itemlist.element.name.hard"):Text.empty()));
         ret.add(Text.literal(Formatting.GRAY+msg));
-        ret.add(Text.literal(Formatting.GRAY+"参与者: "+String.join(",", principals)));
+        ret.add(LangProvider.get("msg.liteitemlist.gui.taskitem.claim", String.join(",", principals)));
         return ret;
     }
 

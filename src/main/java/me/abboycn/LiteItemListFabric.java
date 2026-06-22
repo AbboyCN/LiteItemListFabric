@@ -2,6 +2,7 @@ package me.abboycn;
 
 import me.abboycn.data.DataPersistenceManager;
 import me.abboycn.event.*;
+import me.abboycn.resource.LangProvider;
 import me.abboycn.task.TaskManager;
 import net.fabricmc.api.ModInitializer;
 
@@ -18,6 +19,7 @@ public class LiteItemListFabric implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		LangProvider.loadLanguage();
 		DataPersistenceManager.initDirectory();
 
 		registerCommands();

@@ -129,7 +129,7 @@ public class LitematicaReader {
     private static void traverseDirectory(File dir) {
         File[] files = dir.listFiles();
         if (files == null) {
-            LiteItemListFabric.LOGGER.warn("无法读取目录内容: {}", dir.getAbsolutePath());
+            LiteItemListFabric.LOGGER.warn("failed to read folder: {}", dir.getAbsolutePath());
             return;
         }
         for (File file : files) {
@@ -142,11 +142,11 @@ public class LitematicaReader {
                     String pathStr = path.toString();
                     NbtCompound nbtCompound = NbtIo.readCompressed(path, NbtSizeTracker.ofUnlimitedBytes());
                     if(nbtCompound == null) {
-                        throw new IOException("can't read .litematic file: " + file.getAbsolutePath());
+                        throw new IOException("can not read litematic file: " + file.getAbsolutePath());
                     }
                     fileNameSuggestionName.put(pathStr, String.format("%s(%s)", nbtCompound.getCompound("Metadata").getString("Name"),file.getName()));
                 } catch (Exception e) {
-                    LiteItemListFabric.LOGGER.error("can't read .litematic file: {}", file.getAbsolutePath(), e);
+                    LiteItemListFabric.LOGGER.error("can not read litematic file: {}", file.getAbsolutePath(), e);
                 }
             }
         }

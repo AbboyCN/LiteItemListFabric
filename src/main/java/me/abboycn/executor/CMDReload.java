@@ -4,10 +4,9 @@ import com.mojang.brigadier.context.CommandContext;
 import me.abboycn.LiteItemListFabric;
 import me.abboycn.data.DataPersistenceManager;
 import me.abboycn.data.LitematicaReader;
+import me.abboycn.resource.LangProvider;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 public class CMDReload {
     public static int CMDReloadExecutor(CommandContext<ServerCommandSource> context){
@@ -29,10 +28,11 @@ public class CMDReload {
             }
             DataPersistenceManager.loadTasks();
             LitematicaReader.refreshFileList();
-            player.sendMessage(Text.literal(Formatting.GREEN + "已" + (isForce?"强制":"") + "重载所有任务!"));
+            player.sendMessage(LangProvider.get(isForce?"msg.liteitemlist.cmd.reload.force.success":"msg.liteitemlist.cmd.reload.success"), false);
             return 1;
         }
         catch(Exception e){
+            player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.reload.failed"));
             LiteItemListFabric.LOGGER.error("Error while loading tasks:", e);
             return 0;
         }

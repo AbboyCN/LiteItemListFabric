@@ -1,6 +1,7 @@
 package me.abboycn.bot;
 
 import com.google.gson.annotations.SerializedName;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.ArrayList;
@@ -42,6 +43,14 @@ public class TaskStorageBotManager {
     }
 
     public Collection<StorageBot> getBots(){return storageBots;}
+
+    public int getOnlineCount(MinecraftServer server){
+        return (int)storageBots.stream().filter(storageBot -> storageBot.isOnline(server)).count();
+    }
+
+    public int getOfflineCount(MinecraftServer server){
+        return storageBots.size() - getOnlineCount(server);
+    }
 
     public boolean hasBot(){return !storageBots.isEmpty();}
 

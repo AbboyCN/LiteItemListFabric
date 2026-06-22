@@ -1,5 +1,6 @@
 package me.abboycn.gui;
 
+import me.abboycn.resource.LangProvider;
 import me.abboycn.task.ItemListTask;
 import me.abboycn.task.TaskItem;
 import net.minecraft.component.DataComponentTypes;
@@ -13,10 +14,10 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static me.abboycn.gui.TaskItemListScreenHandler.openTaskItemListMenu;
 
@@ -50,30 +51,32 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
         slotToFuncMap = new HashMap<>();
 
         // [0] 单击返回
-        MenuFunctionItem backItem = new MenuFunctionItem(Items.SPECTRAL_ARROW, Text.literal(Formatting.GOLD + "<= 返回物品列表"), new ArrayList<>());
+        MenuFunctionItem backItem = new MenuFunctionItem(Items.SPECTRAL_ARROW, LangProvider.get("gui.liteitemlist.universal.back"), new ArrayList<>());
         menuInventory.setStack(0, backItem.getItemStack());
         slotToFuncMap.put(0, TaskItemScreenHandler.FunctionType.BACK);
 
         // [2] 刷新物品
-        MenuFunctionItem refreshItem = new MenuFunctionItem(Items.PAPER, Text.literal(Formatting.YELLOW + "刷新物品信息"), new ArrayList<>());
+        MenuFunctionItem refreshItem = new MenuFunctionItem(Items.PAPER, LangProvider.get("gui.liteitemlist.universal.refresh"), new ArrayList<>());
         menuInventory.setStack(2, refreshItem.getItemStack());
         slotToFuncMap.put(2, TaskItemScreenHandler.FunctionType.REFRESH_LIST);
 
         // [4] 信息
         ItemStack infoItem = new ItemStack(item.getItem());
-        infoItem.set(DataComponentTypes.LORE, Objects.requireNonNull(infoItem.get(DataComponentTypes.LORE)).with(Text.literal("点击获取更多信息")));
+        infoItem.set(DataComponentTypes.LORE, Objects.requireNonNull(infoItem.get(DataComponentTypes.LORE)).with(LangProvider.get("gui.liteitemlist.taskitem.func.info.hint")));
         menuInventory.setStack(4, infoItem);
         slotToFuncMap.put(4, TaskItemScreenHandler.FunctionType.INFO_OVERVIEW);
 
         // [6] 切换重要
-        MenuFunctionItem switchImptItem = new MenuFunctionItem(item.isImpt()? Items.YELLOW_BANNER : Items.GRAY_BANNER,
-                Text.literal(item.isImpt() ? Formatting.RED + "重要: 是" : Formatting.YELLOW + "困难: 否"), new ArrayList<>());
+        MenuFunctionItem switchImptItem = new MenuFunctionItem(item.isImpt()? Items.YELLOW_BANNER : Items.GRAY_BANNER, LangProvider.get("gui.liteitemlist.taskitem.func.impt"), List.of(
+                LangProvider.get(item.isImpt()?"gui.liteitemlist.universal.t":"gui.liteitemlist.universal.f")
+        ));
         menuInventory.setStack(6, switchImptItem.getItemStack());
         slotToFuncMap.put(6, FunctionType.SWITCH_IMPT);
 
         // [7] 切换困难
-        MenuFunctionItem switchHardItem = new MenuFunctionItem(item.isHard()? Items.RED_BANNER : Items.GRAY_BANNER,
-                Text.literal(item.isHard() ? Formatting.RED + "困难: 是" : Formatting.YELLOW + "困难: 否"), new ArrayList<>());
+        MenuFunctionItem switchHardItem = new MenuFunctionItem(item.isHard()? Items.RED_BANNER : Items.GRAY_BANNER, LangProvider.get("gui.liteitemlist.taskitem.func.hard"), List.of(
+                LangProvider.get(item.isHard()?"gui.liteitemlist.universal.t":"gui.liteitemlist.universal.f")
+        ));
         menuInventory.setStack(7, switchHardItem.getItemStack());
         slotToFuncMap.put(7, FunctionType.SWITCH_HARD);
 
@@ -123,7 +126,7 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
     // 刷新列表
     private void refreshTaskItem(ServerPlayerEntity player) {
         refreshGui();
-        player.sendMessage(Text.literal(Formatting.GREEN + "列表已刷新！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.refresh"), true);
     }
 
     // 信息总览
@@ -134,14 +137,14 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
 
     // 切换困难
     private void switchHard(ServerPlayerEntity player) {
-        player.sendMessage(Text.literal(Formatting.GREEN + "切换成功"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.switch"), true);
         item.setHard(!item.isHard());
         refreshGui();
     }
 
     // 切换重要
     private void switchImpt(ServerPlayerEntity player) {
-        player.sendMessage(Text.literal(Formatting.GREEN + "切换成功"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.switch"), true);
         item.setImpt(!item.isImpt());
         refreshGui();
     }
@@ -156,7 +159,7 @@ public class TaskItemScreenHandler extends LiteItemListMenu {
         player.openHandledScreen(new net.minecraft.screen.NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
-                return Text.literal("任务"+task.getName()+"中的"+item.getItem().getName().getString());
+                return LangProvider.get("gui.liteitemlist.taskitem.title",item.getItem().getName().getString(),task.getName());
             }
 
             @Override

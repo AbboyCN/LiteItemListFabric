@@ -2,7 +2,6 @@ package me.abboycn.task;
 
 import com.google.gson.annotations.SerializedName;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,10 +29,6 @@ public class TaskManager {
 
     public ItemListTask newTask(String name, ServerPlayerEntity player) {
         if (player == null) {
-            return null;
-        }
-        if (checkTaskExist(name)) {
-            player.sendMessage(Text.literal("§c任务\"" + name + "\"已存在,请终止当前任务或重命名新的任务!"));
             return null;
         }
         ItemListTask task = new ItemListTask(name, nextId++, player);

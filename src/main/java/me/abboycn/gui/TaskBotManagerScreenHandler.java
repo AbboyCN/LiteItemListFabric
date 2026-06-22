@@ -1,6 +1,7 @@
 package me.abboycn.gui;
 
 import me.abboycn.bot.StorageBot;
+import me.abboycn.resource.LangProvider;
 import me.abboycn.task.ItemListTask;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
@@ -85,51 +86,51 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{
         slotToFuncMap = new HashMap<>();
 
         // [0] 上一页
-        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "<< 上一页"), new ArrayList<>());
+        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, LangProvider.get("gui.liteitemlist.universal.last_page"), new ArrayList<>());
         menuInventory.setStack(0, pastPageItem.getItemStack());
         slotToFuncMap.put(0, TaskBotManagerScreenHandler.FunctionType.PAST_PAGE);
 
         // [1] 单击返回
-        MenuFunctionItem backItem = new MenuFunctionItem(Items.SPECTRAL_ARROW, Text.literal(Formatting.GOLD + "<= 返回物品列表"), new ArrayList<>());
+        MenuFunctionItem backItem = new MenuFunctionItem(Items.SPECTRAL_ARROW, LangProvider.get("gui.liteitemlist.universal.back"), new ArrayList<>());
         menuInventory.setStack(1, backItem.getItemStack());
         slotToFuncMap.put(1, TaskBotManagerScreenHandler.FunctionType.BACK);
 
         // [2] 新建假人
-        MenuFunctionItem newItem = new MenuFunctionItem(Items.NETHER_STAR, Text.literal(Formatting.YELLOW + "新建存储假人"), List.of(
-                Text.literal(Formatting.GRAY + "点击创建新的存储假人并召唤到自己的位置")
+        MenuFunctionItem newItem = new MenuFunctionItem(Items.NETHER_STAR, LangProvider.get("gui.liteitemlist.botmanager.func.new"), List.of(
+                LangProvider.get("gui.liteitemlist.botmanager.func.new.hint")
         ));
         menuInventory.setStack(2, newItem.getItemStack());
         slotToFuncMap.put(2, TaskBotManagerScreenHandler.FunctionType.NEWBOT);
 
         // [2] 召唤全部
-        MenuFunctionItem summonItem = new MenuFunctionItem(Items.PANDA_SPAWN_EGG, Text.literal(Formatting.YELLOW + "召唤全部假人"), List.of(
-                Text.literal(Formatting.GRAY + "点击召唤全部假人到自己的位置"),
-                Text.literal(Formatting.RED + "[!] " + Formatting.BOLD + "警告：请务必保证周边区域安全，大量假人同时召唤可能导致"),
-                Text.literal(Formatting.RED + "" + Formatting.BOLD + "玩家或假人被挤到不安全的位置，造成不必要的损失！")
+        MenuFunctionItem summonItem = new MenuFunctionItem(Items.PANDA_SPAWN_EGG, LangProvider.get("gui.liteitemlist.botmanager.func.summonall"), List.of(
+                LangProvider.get("gui.liteitemlist.botmanager.func.summonall.hint"),
+                LangProvider.get("gui.liteitemlist.botmanager.func.summonall.warning1"),
+                LangProvider.get("gui.liteitemlist.botmanager.func.summonall.warning2")
         ));
         menuInventory.setStack(3, summonItem.getItemStack());
         slotToFuncMap.put(3, TaskBotManagerScreenHandler.FunctionType.SUMMONALL);
 
         // [6] 筛选：已用空间
-        MenuFunctionItem filterItem_Storage = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + "筛选已用空间"), List.of(
-                Text.literal(filterTypeStorage == FilterType_Storage.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
-                Text.literal(filterTypeStorage == FilterType_Storage.HASSPACE ? Formatting.WHITE + "-> 空间未满" : Formatting.GRAY + "    空间未满"),
-                Text.literal(filterTypeStorage == FilterType_Storage.FULL ? Formatting.WHITE + "-> 空间已满" : Formatting.GRAY + "    空间已满")
+        MenuFunctionItem filterItem_Storage = new MenuFunctionItem(Items.HOPPER, LangProvider.get("gui.liteitemlist.botmanager.func.filter_space"), List.of(
+                Text.literal(filterTypeStorage == FilterType_Storage.DEFAULT ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.universal.filter.default")),
+                Text.literal(filterTypeStorage == FilterType_Storage.HASSPACE ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.botmanager.func.filter_space.has_space")),
+                Text.literal(filterTypeStorage == FilterType_Storage.FULL ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.botmanager.func.filter_space.full"))
         ));
         menuInventory.setStack(6, filterItem_Storage.getItemStack());
         slotToFuncMap.put(6, TaskBotManagerScreenHandler.FunctionType.FILTER_STORAGE);
 
         // [7] 筛选：在线状态
-        MenuFunctionItem filterItem_Online = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + "筛选在线状态"), List.of(
-                Text.literal(filterTypeOnline == FilterType_Online.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
-                Text.literal(filterTypeOnline == FilterType_Online.ONLINE ? Formatting.WHITE + "-> 在线" : Formatting.GRAY + "    在线"),
-                Text.literal(filterTypeOnline == FilterType_Online.OFFLINE ? Formatting.WHITE + "-> 离线" : Formatting.GRAY + "    离线")
+        MenuFunctionItem filterItem_Online = new MenuFunctionItem(Items.HOPPER, LangProvider.get("gui.liteitemlist.botmanager.func.filter_online"), List.of(
+                Text.literal(filterTypeOnline == FilterType_Online.DEFAULT ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.universal.filter.default")),
+                Text.literal(filterTypeOnline == FilterType_Online.ONLINE ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.botmanager.func.filter_online.online")),
+                Text.literal(filterTypeOnline == FilterType_Online.OFFLINE ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.botmanager.func.filter_online.offline"))
         ));
         menuInventory.setStack(7, filterItem_Online.getItemStack());
         slotToFuncMap.put(7, TaskBotManagerScreenHandler.FunctionType.FILTER_ONLINE);
 
         // [8] 下一页
-        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "下一页 >>"), new ArrayList<>());
+        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, LangProvider.get("gui.liteitemlist.universal.next_page"), new ArrayList<>());
         menuInventory.setStack(8, nextPageItem.getItemStack());
         slotToFuncMap.put(8, TaskBotManagerScreenHandler.FunctionType.NEXT_PAGE);
 
@@ -154,10 +155,10 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{
             ItemStack displayStack = bot.getHead(player.server);
             displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal((bot.isFull(player.server)?Formatting.RED:Formatting.GREEN) + bot.getName()));
             displayStack.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                    Text.literal(bot.isOnline(player.server)?(Formatting.GREEN + "在线"):(Formatting.GRAY + "离线")),
-                    Text.literal(Formatting.GRAY + "已用：" + (bot.isFull(player.server)?Formatting.RED:Formatting.GREEN) + bot.getUsedStorage(player.server) + " / 41"),
+                    LangProvider.get("gui.liteitemlist.botmanager.element."+(bot.isOnline(player.server)?"online":"offline")),
+                    LangProvider.get("gui.liteitemlist.botmanager.element.space",bot.isFull(player.server)?"§c":"§a"+bot.getUsedStorage(player.server)),
                     Text.empty(),
-                    Text.literal(Formatting.GRAY + "点击召唤存储假人")
+                    LangProvider.get("gui.liteitemlist.universal.click").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.summon"))
             )));
 
             ls.add(new StorageBot_ItemStack(bot, displayStack));
@@ -245,7 +246,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{
     // 上一页
     private void toPastPage(ServerPlayerEntity player) {
         if(currentPage==0){
-            player.sendMessage(Text.literal(Formatting.RED+"已经是第一页了!"),true);
+            player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.no_last_page"),true);
             refreshGui();
             return;
         }
@@ -278,7 +279,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{
             case FULL -> FilterType_Storage.DEFAULT;
         };
         executeAutoRefresh();
-        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.filter.applied"), true);
     }
 
     private void filterOnline(ServerPlayerEntity player) {
@@ -288,13 +289,13 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{
             case OFFLINE -> FilterType_Online.DEFAULT;
         };
         executeAutoRefresh();
-        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.filter.applied"), true);
     }
 
     // 下一页
     private void toNextPage(ServerPlayerEntity player) {
         if((currentPage+1)*STORAGE_BOT_AREA_SIZE >= upStageStorageBotList.size()) {
-            player.sendMessage(Text.literal(Formatting.RED+"已经是最后一页了!"),true);
+            player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.no_next_page"),true);
             refreshGui();
             return;
         }
@@ -304,12 +305,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{
 
     // 处理物品展示区点击
     private void handleStorageBotClick(ServerPlayerEntity player, StorageBot bot, SlotActionType actionType) {
-        if (actionType == SlotActionType.PICKUP) {
-            bot.playerSummonFake(player);
-        }
-        else if (actionType == SlotActionType.QUICK_MOVE) {
-            player.sendMessage(Text.literal("aaa"));
-        }
+        bot.playerSummonFake(player);
         refreshGui();
     }
 
@@ -317,7 +313,7 @@ public class TaskBotManagerScreenHandler extends LiteItemListMenu{
         player.openHandledScreen(new net.minecraft.screen.NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
-                return Text.literal("任务"+task.getName()+"的存储假人管理");
+                return LangProvider.get("gui.liteitemlist.botmanager.title",task.getName());
             }
 
             @Override

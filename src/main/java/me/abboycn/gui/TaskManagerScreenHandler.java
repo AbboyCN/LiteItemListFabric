@@ -2,6 +2,7 @@ package me.abboycn.gui;
 
 import me.abboycn.LiteItemListFabric;
 import me.abboycn.executor.CMDTaskSwitch;
+import me.abboycn.resource.LangProvider;
 import me.abboycn.task.ItemListTask;
 import me.abboycn.task.TaskMember;
 import net.minecraft.component.DataComponentTypes;
@@ -18,8 +19,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,21 +75,21 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
         slotToFuncMap = new HashMap<>();
 
         // [0] 上一页
-        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "<< 上一页"), new ArrayList<>());
+        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, LangProvider.get("gui.liteitemlist.universal.last_page"), new ArrayList<>());
         menuInventory.setStack(0, pastPageItem.getItemStack());
         slotToFuncMap.put(0, TaskManagerScreenHandler.FunctionType.PAST_PAGE);
 
         // [4] 筛选：加入
-        MenuFunctionItem filterItem_Joined = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + "筛选加入状态"), List.of(
-                Text.literal(filterTypeJoined == TaskManagerScreenHandler.FilterType_Joined.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
-                Text.literal(filterTypeJoined == TaskManagerScreenHandler.FilterType_Joined.JOINED ? Formatting.WHITE + "-> 已加入" : Formatting.GRAY + "    已加入"),
-                Text.literal(filterTypeJoined == TaskManagerScreenHandler.FilterType_Joined.NOTJOINED ? Formatting.WHITE + "-> 未加入" : Formatting.GRAY + "    未加入")
+        MenuFunctionItem filterItem_Joined = new MenuFunctionItem(Items.HOPPER, LangProvider.get("gui.liteitemlist.taskmanager.func.filter_participation"), List.of(
+                Text.literal(filterTypeJoined == TaskManagerScreenHandler.FilterType_Joined.DEFAULT ? Formatting.WHITE + "-> " : Formatting.GRAY + "   ").append(LangProvider.get("gui.liteitemlist.universal.filter.default")),
+                Text.literal(filterTypeJoined == TaskManagerScreenHandler.FilterType_Joined.JOINED ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.taskmanager.func.filter_participation.participated")),
+                Text.literal(filterTypeJoined == TaskManagerScreenHandler.FilterType_Joined.NOTJOINED ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.taskmanager.func.filter_participation.not_participated"))
         ));
         menuInventory.setStack(4, filterItem_Joined.getItemStack());
         slotToFuncMap.put(4, TaskManagerScreenHandler.FunctionType.FILTER_JOINED);
 
         // [8] 下一页
-        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "下一页 >>"), new ArrayList<>());
+        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, LangProvider.get("gui.liteitemlist.universal.next_page"), new ArrayList<>());
         menuInventory.setStack(8, nextPageItem.getItemStack());
         slotToFuncMap.put(8, TaskManagerScreenHandler.FunctionType.NEXT_PAGE);
     }
@@ -108,15 +107,16 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
             ItemStack displayStack = new ItemStack(Items.BOOK);
             displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal(Formatting.YELLOW + task.getName()));
             displayStack.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                    Text.literal(Formatting.GRAY + "创建者：" + task.getCreator()),
-                    Text.literal(Formatting.GRAY + "参与者：" + task.getMembers().stream().limit(3).map(TaskMember::getName).collect(Collectors.joining(", ")) + (task.getMembers().size()>3?"...":"") + " (" + task.getMembers().size()+")"),
-                    Text.literal(Formatting.GRAY + task.getFormattedTime()),
+                    LangProvider.get("gui.liteitemlist.taskmanager.element.creator",task.getCreator()),
+                    LangProvider.get("gui.liteitemlist.taskmanager.element.members",(task.getMembers().stream().limit(3).map(TaskMember::getName).collect(Collectors.joining(", ")) + (task.getMembers().size()>3?"...":"")),task.getMembers().size()),
+                    LangProvider.get("gui.liteitemlist.taskmanager.element.time",task.getFormattedTime()),
                     Text.empty(),
-                    Text.literal(Formatting.GRAY + "进度：" + task.getItemList().getFinishedCount() + "/" + task.getItemList().getTaskItemCount() + " (" + ((task.getItemList().getTaskItemCount()==0)?"0":BigDecimal.valueOf(task.getItemList().getFinishedCount()/(double)task.getItemList().getTaskItemCount()*100).setScale(2, RoundingMode.HALF_UP)) + "%)"),
+                    LangProvider.get("gui.liteitemlist.taskmanager.element.process", task.getItemList().getFinishedCount(), task.getItemList().getTaskItemCount(),
+                            task.getItemList().getProgressPercentage()),
                     Text.empty(),
-                    Text.literal((task.containsMember(player)?(Formatting.AQUA + "[点击]" + Formatting.GRAY + "切换任务"):"")),
-                    Text.literal((task.containsMember(player)?(Formatting.AQUA + "[Shift+点击]" + Formatting.GRAY + "打开任务物品列表"):"")),
-                    Text.literal(Formatting.AQUA + "[丢弃]" + Formatting.GRAY + (task.containsMember(player)?"退出任务":"加入任务"))
+                    LangProvider.get("gui.liteitemlist.universal.click").copy().append(LangProvider.get("gui.liteitemlist.taskmanager.element.switch")),
+                    LangProvider.get("gui.liteitemlist.universal.shift_click").copy().append(LangProvider.get("gui.liteitemlist.taskmanager.element.open")),
+                    LangProvider.get("gui.liteitemlist.universal.drop").copy().append(LangProvider.get(task.containsMember(player)?"gui.liteitemlist.taskmanager.element.leave":"gui.liteitemlist.taskmanager.element.join"))
             )));
             if(LiteItemListFabric.taskManager.getTaskByPlayer(player)!=null&&LiteItemListFabric.taskManager.getTaskByPlayer(player).equals(task)){
                 displayStack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE,true);
@@ -198,7 +198,7 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
     // 上一页
     private void toPastPage(ServerPlayerEntity player) {
         if(currentPage==0){
-            player.sendMessage(Text.literal(Formatting.RED+"已经是第一页了!"),true);
+            player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.no_last_page"),true);
             refreshGui();
             return;
         }
@@ -214,13 +214,13 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
             case NOTJOINED -> TaskManagerScreenHandler.FilterType_Joined.DEFAULT;
         };
         executeAutoRefresh();
-        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.filter.applied"), true);
     }
 
     // 下一页
     private void toNextPage(ServerPlayerEntity player) {
         if((currentPage+1)*TASK_AREA_SIZE >= upStageTaskList.size()) {
-            player.sendMessage(Text.literal(Formatting.RED+"已经是最后一页了!"),true);
+            player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.no_next_page"), true);
             refreshGui();
             return;
         }
@@ -232,7 +232,7 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
     private void handleTaskClick(ServerPlayerEntity player, ItemListTask task, SlotActionType actionType) {
         if (actionType == SlotActionType.PICKUP) {
             if(!task.containsMember(player)){
-                player.sendMessage(Text.literal("§c你未参与此任务!"),true);
+                player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.error.not_in_task"),true);
                 return;
             }
             player.getCommandTags().removeIf(tag -> tag.contains("in_task_"));
@@ -247,7 +247,7 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
                 openTaskItemListMenu(player, task);
             }
             else {
-                player.sendMessage(Text.literal(Formatting.RED+"请先加入该任务!"));
+                player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.error.not_in_task"),true);
             }
         }
         else if (actionType == SlotActionType.THROW) {
@@ -267,7 +267,7 @@ public class TaskManagerScreenHandler extends LiteItemListMenu{
         player.openHandledScreen(new net.minecraft.screen.NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
-                return Text.literal("LiteItemList任务管理面板");
+                return LangProvider.get("gui.liteitemlist.taskmanager.title");
             }
 
             @Override

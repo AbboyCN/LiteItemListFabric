@@ -64,6 +64,13 @@ public class CommandRegister {
                         .executes(CMDReload::CMDReloadExecutor)
                         .then(CommandManager.literal("-force")
                                 .executes(CMDReload::CMDForceReloadExecutor)))
+                .then(CommandManager.literal("config")
+                        .requires(s->s.hasPermissionLevel(3))
+                        .then(CommandManager.literal("language")
+                                .then(CommandManager.literal("zh-cn")
+                                        .executes(s->CMDConfigLanguage.zh_cn()))
+                                .then(CommandManager.literal("en-us")
+                                        .executes(s->CMDConfigLanguage.en_us()))))
         );
     }
 }

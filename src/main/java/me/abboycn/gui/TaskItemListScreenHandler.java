@@ -1,5 +1,6 @@
 package me.abboycn.gui;
 
+import me.abboycn.resource.LangProvider;
 import me.abboycn.task.ItemListTask;
 import me.abboycn.task.TaskItem;
 import net.minecraft.component.DataComponentTypes;
@@ -83,71 +84,71 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         slotToFuncMap = new HashMap<>();
 
         // [0] 上一页
-        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "<< 上一页"), List.of(
-                Text.literal(Formatting.GRAY + "当前第 " + (currentPage+1) + " / " + (upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE+1) + " 页")
+        MenuFunctionItem pastPageItem = new MenuFunctionItem(Items.ARROW, LangProvider.get("gui.liteitemlist.universal.last_page"), List.of(
+                LangProvider.get("gui.liteitemlist.universal.pageinfo",currentPage+1,upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE+1)
         ));
         menuInventory.setStack(0, pastPageItem.getItemStack());
         slotToFuncMap.put(0, TaskItemListScreenHandler.FunctionType.PAST_PAGE);
 
         // [1] 单击返回
-        MenuFunctionItem backItem = new MenuFunctionItem(Items.SPECTRAL_ARROW, Text.literal(Formatting.GOLD + "<= 返回任务管理面板"), new ArrayList<>());
+        MenuFunctionItem backItem = new MenuFunctionItem(Items.SPECTRAL_ARROW, LangProvider.get("gui.liteitemlist.universal.back"), new ArrayList<>());
         menuInventory.setStack(1, backItem.getItemStack());
         slotToFuncMap.put(1, TaskItemListScreenHandler.FunctionType.BACK);
 
         // [2] 刷新列表
-        MenuFunctionItem refreshItem = new MenuFunctionItem(Items.PAPER, Text.literal(Formatting.YELLOW + "刷新列表"), List.of(
-                Text.literal(Formatting.GRAY + "点击刷新物品列表"),
-                Text.literal(Formatting.GRAY + "将立即同步最新物品物品状态并刷新假人库存")
+        MenuFunctionItem refreshItem = new MenuFunctionItem(Items.PAPER, LangProvider.get("gui.liteitemlist.universal.refresh"), List.of(
+                LangProvider.get("gui.liteitemlist.itemlist.func.refresh.hint")
         ));
         menuInventory.setStack(2, refreshItem.getItemStack());
         slotToFuncMap.put(2, TaskItemListScreenHandler.FunctionType.REFRESH_LIST);
 
         // [3] 存储假人管理
-        MenuFunctionItem botManagerItem = new MenuFunctionItem(Items.PLAYER_HEAD, Text.literal(Formatting.YELLOW + "管理存储假人"), new ArrayList<>());
+        MenuFunctionItem botManagerItem = new MenuFunctionItem(Items.PLAYER_HEAD, LangProvider.get("gui.liteitemlist.itemlist.func.botmanager"), new ArrayList<>());
         menuInventory.setStack(3, botManagerItem.getItemStack());
         slotToFuncMap.put(3, TaskItemListScreenHandler.FunctionType.MANAGE_BOT);
 
         // [4] 信息总览
         MenuFunctionItem infoItem = new MenuFunctionItem(Items.BOOK, Text.literal(Formatting.AQUA + task.getName()), List.of(
-                Text.literal(Formatting.GRAY + "点击查看物品统计信息"),
-                Text.literal(Formatting.GRAY + "物品项数: " + upStageTaskItemList.size())
+                LangProvider.get("gui.liteitemlist.itemlist.func.info.hint"),
+                LangProvider.get("gui.liteitemlist.itemlist.func.info.process",task.getItemList().getFinishedCount(),task.getItemList().getTaskItemCount(),
+                        task.getItemList().getProgressPercentage())
         ));
         menuInventory.setStack(4, infoItem.getItemStack());
-        slotToFuncMap.put(4, TaskItemListScreenHandler.FunctionType.INFO_OVERVIEW); // 绑定格子0→信息总览
+        slotToFuncMap.put(4, TaskItemListScreenHandler.FunctionType.INFO_OVERVIEW);
 
         // [5] 筛选:认领状态
-        MenuFunctionItem filterItem_Clime = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + ("筛选认领状态")), List.of(
-                Text.literal(filterTypeClime == MenuListStatus.FilterType_Clime.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
-                Text.literal(filterTypeClime == MenuListStatus.FilterType_Clime.CLIMED ? Formatting.WHITE + "-> 我认领的" : Formatting.GRAY + "    我认领的"),
-                Text.literal(filterTypeClime == MenuListStatus.FilterType_Clime.UNCLIMED ? Formatting.WHITE + "-> 未被认领" : Formatting.GRAY + "    未被认领")
+        MenuFunctionItem filterItem_Clime = new MenuFunctionItem(Items.HOPPER, LangProvider.get("gui.liteitemlist.itemlist.func.filter_claim"), List.of(
+                Text.literal(filterTypeClime == MenuListStatus.FilterType_Clime.DEFAULT ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.universal.filter.default")),
+                Text.literal(filterTypeClime == MenuListStatus.FilterType_Clime.CLIMED ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_claim.claimed")),
+                Text.literal(filterTypeClime == MenuListStatus.FilterType_Clime.UNCLIMED ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_claim.unclaimed"))
         ));
         menuInventory.setStack(5, filterItem_Clime.getItemStack());
         slotToFuncMap.put(5, TaskItemListScreenHandler.FunctionType.FILTER_UNCLAIMED);
 
         // [6] 筛选:完成情况
-        MenuFunctionItem filterItem_Finished = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + ("筛选完成状态")), List.of(
-                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
-                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.UNFINISHED ? Formatting.WHITE + "-> 未开始/进行中" : Formatting.GRAY + "    未开始/进行中"),
-                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.PROCESSING ? Formatting.WHITE + "-> 进行中" : Formatting.GRAY + "    进行中"),
-                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.NOTSTART ? Formatting.WHITE + "-> 未开始" : Formatting.GRAY + "    未开始"),
-                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.FINISHED ? Formatting.WHITE + "-> 已完成" : Formatting.GRAY + "    已完成")
+        MenuFunctionItem filterItem_Finished = new MenuFunctionItem(Items.HOPPER, LangProvider.get("gui.liteitemlist.itemlist.func.filter_process"), List.of(
+                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.DEFAULT ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.universal.filter.default")),
+                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.UNFINISHED ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_process.notstart_processing")),
+                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.PROCESSING ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_process.processing")),
+                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.NOTSTART ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_process.notstart")),
+                Text.literal(filterTypeFinished == MenuListStatus.FilterType_Finished.FINISHED ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_process.finished"))
         ));
         menuInventory.setStack(6, filterItem_Finished.getItemStack());
         slotToFuncMap.put(6, TaskItemListScreenHandler.FunctionType.FILTER_FINISHED);
 
         // [7] 筛选:物品属性
-        MenuFunctionItem filterItem_Mark = new MenuFunctionItem(Items.HOPPER, Text.literal(Formatting.YELLOW + ("筛选物品标记")), List.of(
-                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.DEFAULT ? Formatting.WHITE + "-> 全部" : Formatting.GRAY + "    全部"),
-                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.IMPTORHARD ? Formatting.WHITE + "-> 重要/困难" : Formatting.GRAY + "    重要/困难"),
-                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.IMPT ? Formatting.WHITE + "-> 重要" : Formatting.GRAY + "    重要"),
-                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.HARD ? Formatting.WHITE + "-> 困难" : Formatting.GRAY + "    困难")
+        MenuFunctionItem filterItem_Mark = new MenuFunctionItem(Items.HOPPER, LangProvider.get("gui.liteitemlist.itemlist.func.filter_marker"), List.of(
+                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.DEFAULT ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.universal.filter.default")),
+                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.IMPTORHARD ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_marker.impt_hard")),
+                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.IMPT ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_marker.impt")),
+                Text.literal(filterTypeMark == MenuListStatus.FilterType_Mark.HARD ? Formatting.WHITE + "-> " : Formatting.GRAY + "    ").append(LangProvider.get("gui.liteitemlist.itemlist.func.filter_marker.hard"))
         ));
         menuInventory.setStack(7, filterItem_Mark.getItemStack());
         slotToFuncMap.put(7, TaskItemListScreenHandler.FunctionType.FILTER_MARK);
 
         // [8] 下一页
-        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, Text.literal(Formatting.GOLD + "下一页 >>"), List.of(
-                Text.literal(Formatting.GRAY + "当前第 " + (currentPage+1) + " / " + (upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE+1) + " 页")
+        MenuFunctionItem nextPageItem = new MenuFunctionItem(Items.ARROW, LangProvider.get("gui.liteitemlist.universal.next_page"), List.of(
+                LangProvider.get("gui.liteitemlist.universal.pageinfo",currentPage+1,upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE+1)
         ));
         menuInventory.setStack(8, nextPageItem.getItemStack());
         slotToFuncMap.put(8, TaskItemListScreenHandler.FunctionType.NEXT_PAGE);
@@ -173,27 +174,34 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
             TaskItem taskItem = upStageTaskItemList.stream().toList().get(i);
 
             ItemStack displayStack = new ItemStack(taskItem.getItem());
-            String namePrefix = (taskItem.isImpt() ? Formatting.YELLOW + "[重要] " : "") + (taskItem.isHard() ? Formatting.RED + "[困难] " : "");
-            displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal(namePrefix + Formatting.WHITE + taskItem.getItem().getName().getString()));
+            Text namePrefix = (taskItem.isImpt() ? LangProvider.get("gui.liteitemlist.itemlist.element.name.impt") : Text.literal("")).copy().append(taskItem.isHard() ? LangProvider.get("gui.liteitemlist.itemlist.element.name.hard") : Text.literal(""));
+            displayStack.set(DataComponentTypes.CUSTOM_NAME,namePrefix.copy().append(Text.literal(Formatting.WHITE + taskItem.getItem().getName().getString())));
 
             List<Text> lore = new ArrayList<>();
 
-            lore.add(Text.literal(Formatting.GRAY + "总量: " + (taskItem.isFinished()?Formatting.GREEN:Formatting.RED) + taskItem.getAvailable() + " / " + taskItem.getAmount()));
+            lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.count").copy().append(Text.literal((taskItem.isFinished()?Formatting.GREEN:Formatting.RED) + "" + taskItem.getAvailable() + " / " + taskItem.getAmount())));
             if(!taskItem.isFinished()){
                 int box = (taskItem.getAmount()-taskItem.getAvailable())/1728;
                 int stack = (taskItem.getAmount()-taskItem.getAvailable()-1728*box)/64;
                 int single = (taskItem.getAmount()-taskItem.getAvailable())%64;
-                lore.add(Text.literal(Formatting.GRAY + "还需: " + (box!=0?box+"盒 ":"") + (stack!=0?stack+"组 ":"") + (single!=0?single+"个":"") + " (" + (taskItem.getAmount()-taskItem.getAvailable()) + "个)"));
+                lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.require").copy()
+                        .append(box!=0?LangProvider.get("msg.liteitemlist.gui.universal.box",box):Text.literal(""))
+                        .append(stack!=0?LangProvider.get("msg.liteitemlist.gui.universal.stack",stack):Text.literal(""))
+                        .append(single!=0?LangProvider.get("msg.liteitemlist.gui.universal.single",single):Text.literal("")));
             }
 
-            lore.add(Text.literal(Formatting.GRAY + "备注: " + (taskItem.isHard() ? "困难 " : "") + (taskItem.isImpt() ? "重要 " : "")));
+            lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.comment").copy()
+                    .append(taskItem.isImpt()?LangProvider.get("gui.liteitemlist.itemlist.element.impt"):Text.literal(""))
+                    .append(taskItem.isHard()?LangProvider.get("gui.liteitemlist.itemlist.element.hard"):Text.literal("")));
             lore.add(Text.literal(Formatting.GRAY + taskItem.getMsg()));
             lore.add(Text.literal(Formatting.GRAY + taskItem.getItem().toString()));
             lore.add(Text.empty());
 
-            lore.add(Text.literal(Formatting.GOLD + "认领: " + (taskItem.getPrincipals().isEmpty()?(Formatting.GRAY + "未认领"):(Formatting.YELLOW + String.join(",", taskItem.getPrincipals())))));
-            lore.add(Text.literal(Formatting.AQUA + "[单击] " + Formatting.GRAY + (taskItem.getPrincipals().contains(player.getName().getString())?"取消认领物品":"认领物品")));
-            lore.add(Text.literal(Formatting.AQUA + "[Shift+单击] " + Formatting.GRAY + "打开物品属性"));
+            lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.claim").copy().append((taskItem.getPrincipals().isEmpty()?LangProvider.get("gui.liteitemlist.itemlist.element.claim.none"):Text.literal(Formatting.YELLOW + String.join(",", taskItem.getPrincipals())))));
+            lore.add(LangProvider.get("gui.liteitemlist.universal.click").copy().append(LangProvider.get(taskItem.getPrincipals().contains(player.getName().getString())?"gui.liteitemlist.itemlist.element.operation.unclaim":"gui.liteitemlist.itemlist.element.operation.claim")));
+            lore.add(LangProvider.get("gui.liteitemlist.universal.shift_click").copy().append(LangProvider.get("gui.liteitemlist.itemlist.element.operation.properties")));
+
+
 
             displayStack.set(DataComponentTypes.LORE,new LoreComponent(lore));
 
@@ -292,25 +300,23 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
 
     // 处理功能区点击
     private void handleMultiFunctionClick(ServerPlayerEntity player, FunctionType funcType, SlotActionType actionType) {
-        if(actionType == SlotActionType.PICKUP){
-            switch (funcType) {
-                case PAST_PAGE -> toPastPage(player);                   // 上一页
-                case BACK -> backToSuperMenu(player);                   // 返回至上级菜单
-                case INFO_OVERVIEW -> sendInfoOverview(player);         // 信息总览
-                case REFRESH_LIST -> refreshTaskItemList(player);       // 刷新列表
-                case MANAGE_BOT -> manageStorageBot(player);            // 管理存储假人
-                case FILTER_UNCLAIMED -> filterUnclaimedItems(player);  // 筛选认领状态
-                case FILTER_FINISHED -> filterFinishedItems(player);    // 筛选完成状态
-                case FILTER_MARK -> filterMarkItems(player);            // 筛选物品标记
-                case NEXT_PAGE -> toNextPage(player);                   // 下一页
-            }
+        switch (funcType) {
+            case PAST_PAGE -> toPastPage(player);                   // 上一页
+            case BACK -> backToSuperMenu(player);                   // 返回至上级菜单
+            case INFO_OVERVIEW -> sendInfoOverview(player);         // 信息总览
+            case REFRESH_LIST -> refreshTaskItemList(player);       // 刷新列表
+            case MANAGE_BOT -> manageStorageBot(player);            // 管理存储假人
+            case FILTER_UNCLAIMED -> filterUnclaimedItems(player);  // 筛选认领状态
+            case FILTER_FINISHED -> filterFinishedItems(player);    // 筛选完成状态
+            case FILTER_MARK -> filterMarkItems(player);            // 筛选物品标记
+            case NEXT_PAGE -> toNextPage(player);                   // 下一页
         }
     }
 
     // 上一页
     private void toPastPage(ServerPlayerEntity player) {
         if(currentPage==0){
-            player.sendMessage(Text.literal(Formatting.RED+"已经是第一页了!"),true);
+            player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.no_last_page"),true);
             refreshGui();
             return;
         }
@@ -328,17 +334,31 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
     // 信息总览
     private void sendInfoOverview(ServerPlayerEntity player) {
         player.closeHandledScreen();
-        player.sendMessage(Text.literal(Formatting.BLUE + "统计信息: "+task.getName()));
-        player.sendMessage(Text.literal(Formatting.GRAY + "> 总物品数:" + Formatting.WHITE + upStageTaskItemList.size()));
-        player.sendMessage(Text.literal(Formatting.GRAY + "> 困难物品数:" + Formatting.WHITE + upStageTaskItemList.stream().filter(TaskItem::isHard).count()));
-        player.sendMessage(Text.literal(Formatting.GRAY + "> 重要物品数:" + Formatting.WHITE + upStageTaskItemList.stream().filter(TaskItem::isImpt).count()));
-        player.sendMessage(Text.literal(Formatting.GRAY + "> 未认领物品数:" + Formatting.WHITE + upStageTaskItemList.stream().filter(t -> t.getPrincipals().isEmpty()).count()));
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.itemlist.statistics"));
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.itemlist.total_impt_hard_unclaimed",
+                task.getItemList().getTaskItemCount(),
+                task.getItemList().getImptCount(),
+                task.getItemList().getHardCount(),
+                task.getItemList().getUnclaimedCount()));
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.itemlist.process",
+                task.getItemList().getFinishedCount(),
+                task.getItemList().getTaskItemCount(),
+                task.getItemList().getProgressPercentage(),
+                task.getItemList().getFinishedCount(),
+                task.getItemList().getOngoingCount(),
+                task.getItemList().getNotStartCount()));
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.itemlist.bot",
+                task.getStorageBotManager().getBots().size(),
+                task.getStorageBotManager().getOnlineCount(player.server),
+                task.getStorageBotManager().getOfflineCount(player.server)));
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.itemlist.member",
+                task.getMembers().size()));
     }
 
     // 刷新列表
     private void refreshTaskItemList(ServerPlayerEntity player) {
         executeAutoRefresh();
-        player.sendMessage(Text.literal(Formatting.GREEN + "列表已刷新！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.refresh"), true);
     }
 
     // 管理存储假人
@@ -356,7 +376,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         };
         task.getMember(player).getListStatus().filterTypeClime=filterTypeClime;
         executeAutoRefresh();
-        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.filter.applied"), true);
     }
 
     private void filterFinishedItems(ServerPlayerEntity player) {
@@ -369,7 +389,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         };
         task.getMember(player).getListStatus().filterTypeFinished=filterTypeFinished;
         executeAutoRefresh();
-        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.filter.applied"), true);
     }
 
     private void filterMarkItems(ServerPlayerEntity player) {
@@ -381,13 +401,13 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         };
         task.getMember(player).getListStatus().filterTypeMark=filterTypeMark;
         executeAutoRefresh();
-        player.sendMessage(Text.literal(Formatting.YELLOW + "筛选器已应用！"), true);
+        player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.filter.applied"), true);
     }
 
     // 下一页
     private void toNextPage(ServerPlayerEntity player) {
         if((currentPage+1)*TASK_ITEM_AREA_SIZE >= upStageTaskItemList.size()) {
-            player.sendMessage(Text.literal(Formatting.RED+"已经是最后一页了!"),true);
+            player.sendMessage(LangProvider.get("msg.liteitemlist.gui.universal.no_next_page"), true);
             refreshGui();
             return;
         }
@@ -419,7 +439,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
         player.openHandledScreen(new NamedScreenHandlerFactory() {
             @Override
             public Text getDisplayName() {
-                return Text.literal("任务: "+task.getName()+" ("+task.getItemList().getTaskItemCount()+")");
+                return LangProvider.get("gui.liteitemlist.itemlist.title",task.getName(),task.getItemList().getTaskItemCount());
             }
 
             @Override

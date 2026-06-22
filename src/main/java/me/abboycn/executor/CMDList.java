@@ -3,11 +3,11 @@ package me.abboycn.executor;
 import com.mojang.brigadier.context.CommandContext;
 import me.abboycn.LiteItemListFabric;
 import me.abboycn.gui.TaskItemListScreenHandler;
+import me.abboycn.resource.LangProvider;
 import me.abboycn.task.ItemListTask;
 import me.abboycn.task.TaskItemList;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 
 public class CMDList {
     public static int CMDListExecutor(CommandContext<ServerCommandSource> context){
@@ -20,17 +20,13 @@ public class CMDList {
     }
 
     public static int showGUI(ServerPlayerEntity player, ItemListTask itemListTask){
-        if(player==null){
-            return 0;
-        }
+        if(player==null) return 0;
         if(itemListTask==null){
-            player.sendMessage(Text.literal("§c你没有参与任务."));
+            player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.error.not_in_task"));
             return 0;
         }
         TaskItemList taskItemList = itemListTask.getItemList();
-        if(taskItemList==null){
-            return 0;
-        }
+        if(taskItemList==null) return 0;
         try{
             TaskItemListScreenHandler.openTaskItemListMenu(player, itemListTask);
             return 1;

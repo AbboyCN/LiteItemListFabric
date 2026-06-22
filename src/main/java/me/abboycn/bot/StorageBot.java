@@ -1,6 +1,7 @@
 package me.abboycn.bot;
 
 import carpet.patches.EntityPlayerMPFake;
+import me.abboycn.resource.LangProvider;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.entity.player.PlayerInventory;
@@ -8,7 +9,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import net.minecraft.world.GameMode;
 
 import java.util.Set;
@@ -71,11 +71,11 @@ public class StorageBot {
     public void playerSummonFake(ServerPlayerEntity player) {
         if (player == null) return;
         if (m_name.length() > 16) {
-            player.sendMessage(Text.literal("§c创建假人失败:名称过长!"));
+            player.sendMessage(LangProvider.get("msg.liteitemlist.bot.summon.failed.name_to_long"));
             return;
         }
         if (EntityPlayerMPFake.isSpawningPlayer(m_name)) {
-            player.sendMessage(Text.literal("§c创建假人失败:该假人正在创建!"));
+            player.sendMessage(LangProvider.get("msg.liteitemlist.bot.summon.failed.summoning"));
             return;
         }
         ServerPlayerEntity fake = getPlayer(player.server);
@@ -121,7 +121,7 @@ public class StorageBot {
                     return;
                 }
             }
-            server.execute(() -> player.sendMessage(Text.literal("§c假人创建超时: " + fakeName)));
+            server.execute(() -> player.sendMessage(LangProvider.get("msg.liteitemlist.bot.summon.failed.timedout", fakeName)));
         }).start();
     }
 
