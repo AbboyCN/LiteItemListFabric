@@ -13,7 +13,7 @@ public class LangProvider {
     private static final Gson GSON = new Gson();
     private static Map<String, String> currentLang;
 
-    // 默认语言为英文
+    // 默认语言为简体中文
     private static Lang lang = Lang.zh_cn;
 
     public enum Lang {
