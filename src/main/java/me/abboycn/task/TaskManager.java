@@ -1,6 +1,7 @@
 package me.abboycn.task;
 
 import com.google.gson.annotations.SerializedName;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.ArrayList;
@@ -71,5 +72,9 @@ public class TaskManager {
 
     public void deleteTask(int id) {
         m_tasks.remove(getTask(id));
+    }
+
+    public void startAutoRefreshAll(MinecraftServer server){
+        m_tasks.forEach(t -> t.startAutoRefreshStorage(server));
     }
 }

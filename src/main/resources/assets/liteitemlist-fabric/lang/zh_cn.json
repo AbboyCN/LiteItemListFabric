@@ -13,7 +13,7 @@
   "msg.liteitemlist.cmd.reload.success": "§a已重载!",
   "msg.liteitemlist.cmd.reload.force.success": "§a已强制重载!",
   "msg.liteitemlist.cmd.reload.failed": "§c重载时发生意外错误!",
-  "msg.liteitemlist.cmd.task.cancel.notice": "§e你加入的任务 \"%s\" 已被 §b%s 取消.",
+  "msg.liteitemlist.cmd.task.cancel.notice": "§e你加入的任务 \"%s\" 已被 §b%s §e取消.",
   "msg.liteitemlist.cmd.task.cancel.success": "§a已取消任务.",
   "msg.liteitemlist.cmd.task.join.success": "§a已加入任务: §e%s",
   "msg.liteitemlist.cmd.task.leave.success": "§a已离开任务: §e%s",

@@ -179,7 +179,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
 
             List<Text> lore = new ArrayList<>();
 
-            lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.count").copy().append(Text.literal((taskItem.isFinished()?Formatting.GREEN:Formatting.RED) + "" + taskItem.getAvailable() + " / " + taskItem.getAmount())));
+            lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.count").copy().append(Text.literal((taskItem.isFinished()?Formatting.GREEN:taskItem.getAvailable()==0?Formatting.RED:Formatting.YELLOW) + "" + taskItem.getAvailable() + " / " + taskItem.getAmount())));
             if(!taskItem.isFinished()){
                 int box = (taskItem.getAmount()-taskItem.getAvailable())/1728;
                 int stack = (taskItem.getAmount()-taskItem.getAvailable()-1728*box)/64;
@@ -204,6 +204,10 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
 
 
             displayStack.set(DataComponentTypes.LORE,new LoreComponent(lore));
+
+            if(taskItem.getPrincipals().contains(player.getName().getString())){
+                displayStack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE,true);
+            }
 
             if(taskItem.isFinished()){
                 finished.add(new TaskItem_ItemStack(taskItem,displayStack));

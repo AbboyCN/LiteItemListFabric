@@ -1,6 +1,7 @@
 package me.abboycn;
 
 import me.abboycn.data.DataPersistenceManager;
+import me.abboycn.data.nbtprocess.NbtProcessorRegister;
 import me.abboycn.event.*;
 import me.abboycn.resource.LangProvider;
 import me.abboycn.task.TaskManager;
@@ -21,6 +22,7 @@ public class LiteItemListFabric implements ModInitializer {
 	public void onInitialize() {
 		LangProvider.loadLanguage();
 		DataPersistenceManager.initDirectory();
+		NbtProcessorRegister.registerNbtProcessor();
 
 		registerCommands();
 

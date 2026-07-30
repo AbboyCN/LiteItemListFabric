@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import me.abboycn.LiteItemListFabric;
 import me.abboycn.task.TaskManager;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.server.MinecraftServer;
 
 import java.io.File;
 import java.io.FileReader;
@@ -27,21 +28,28 @@ public class DataPersistenceManager {
     }
 
     public static void saveTasks() {
+        saveTasks(true);
+    }
+
+    public static void saveTasks(boolean printLog) {
         try (FileWriter writer = new FileWriter(TASKS_FILE)) {
             GSON.toJson(LiteItemListFabric.taskManager, writer);
-            LiteItemListFabric.LOGGER.info("Successfully saved data for {} task(s).", LiteItemListFabric.taskManager.getTasks().size());
+            if (printLog) {
+                LiteItemListFabric.LOGGER.info("Successfully saved data for {} task(s).", LiteItemListFabric.taskManager.getTasks().size());
+            }
         } catch (IOException e) {
             LiteItemListFabric.LOGGER.error("failed to save task data:", e);
         }
     }
 
-    public static void loadTasks() {
+    public static void loadTasks(MinecraftServer server) {
         File file = new File(TASKS_FILE);
         if (!file.exists()) return;
 
         try (FileReader reader = new FileReader(file)) {
             LiteItemListFabric.taskManager.getTasks().clear();
             LiteItemListFabric.taskManager = GSON.fromJson(reader, TaskManager.class);
+            LiteItemListFabric.taskManager.startAutoRefreshAll(server);
             LiteItemListFabric.LOGGER.info("loaded {} task(s) from saved data.", LiteItemListFabric.taskManager.getTasks().size());
         } catch (IOException e) {
             LiteItemListFabric.LOGGER.error("failed to load task data:", e);

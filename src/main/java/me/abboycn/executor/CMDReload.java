@@ -26,7 +26,7 @@ public class CMDReload {
             if(!isForce){
                 DataPersistenceManager.saveTasks();
             }
-            DataPersistenceManager.loadTasks();
+            DataPersistenceManager.loadTasks(player.getServer());
             LitematicaReader.refreshFileList();
             player.sendMessage(LangProvider.get(isForce?"msg.liteitemlist.cmd.reload.force.success":"msg.liteitemlist.cmd.reload.success"), false);
             return 1;

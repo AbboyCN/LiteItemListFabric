@@ -1,8 +1,12 @@
+// me/abboycn/data/LitematicaReader.java
 package me.abboycn.data;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import me.abboycn.LiteItemListFabric;
+import me.abboycn.data.nbtprocess.BlockNbtProcessable;
+import me.abboycn.data.nbtprocess.EntityNbtProcessable;
+import me.abboycn.data.nbtprocess.processors.*;
 import me.abboycn.task.TaskItem;
 import me.abboycn.task.TaskItemList;
 import net.minecraft.block.Block;
@@ -11,8 +15,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.*;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
@@ -29,75 +31,65 @@ public class LitematicaReader {
     public static final Path SYNCMATICA_PATH = Paths.get("syncmatics/");
     public static final BiMap<String, String> fileNameSuggestionName = HashBiMap.create();
 
-    private static final TagKey<Block> SLABS = TagKey.of(RegistryKeys.BLOCK, Identifier.of("minecraft", "slabs"));
+    // 方块Nbt处理器
+    private static final List<BlockNbtProcessable> BLOCK_PROCESSORS = new ArrayList<>();
 
-    private interface ConditionalBlockProcessor {
-        boolean process(BlockStateInfo blockInfo, NbtCompound tileEntity, Map<Item, Integer> itemCountMap);
+    public static void registerBlockProcessor(BlockNbtProcessable processor) {
+        BLOCK_PROCESSORS.add(processor);
+        LiteItemListFabric.LOGGER.info("Registered block processor: {}", processor.getName());
     }
 
-    private static final Map<Block, ConditionalBlockProcessor> BLOCK_PROCESSORS = new HashMap<>();
-    private static final Map<TagKey<Block>, ConditionalBlockProcessor> TAG_PROCESSORS = new HashMap<>();
-
-    static {
-        registerProcessors();
+    public static void registerBlockProcessors(BlockNbtProcessable... processors) {
+        for (BlockNbtProcessable processor : processors) {
+            registerBlockProcessor(processor);
+        }
     }
 
-    private static void registerProcessors() {
-        // 双层半砖
-        TAG_PROCESSORS.put(SLABS, (info, te, map) -> {
-            Item slabItem = info.block.asItem();
-            if (slabItem == null || slabItem == Items.AIR) return false;
-            String type = info.properties.get("type");
-            int amount = "double".equals(type) ? 2 : 1;
-            return addItem(map, slabItem, amount);
-        });
-        // 海泡菜
-        BLOCK_PROCESSORS.put(Blocks.SEA_PICKLE, (info, te, map) -> {
-            int pickles = 1;
-            String count = info.properties.get("pickles");
-            if (count != null) {
-                try {
-                    pickles = Integer.parseInt(count);
-                } catch (NumberFormatException ignored) {}
-            }
-            return addItem(map, Items.SEA_PICKLE, pickles);
-        });
-        // 花盆
-        BLOCK_PROCESSORS.put(Blocks.FLOWER_POT, (info, te, map) -> {
-            addItem(map, Items.FLOWER_POT, 1);
-            if (te != null && te.contains("Item", NbtElement.COMPOUND_TYPE)) {
-                NbtCompound itemNbt = te.getCompound("Item");
-                String itemId = itemNbt.getString("id");
-                int count = itemNbt.getInt("Count");
-                if (itemId != null && !itemId.isEmpty()) {
-                    Item flower = Registries.ITEM.get(Identifier.of(itemId));
-                    if (flower != Items.AIR) {
-                        addItem(map, flower, count);
-                    }
-                }
-            }
-            return true;
-        });
+    public static List<BlockNbtProcessable> getBlockProcessors() {
+        return Collections.unmodifiableList(BLOCK_PROCESSORS);
+    }
+
+    public static void clearBlockProcessors() {
+        BLOCK_PROCESSORS.clear();
+        LiteItemListFabric.LOGGER.info("Cleared all block processors");
+    }
+
+    // 实体Nbt处理器
+    private static final List<EntityNbtProcessable> ENTITY_PROCESSORS = new ArrayList<>();
+
+    public static void registerEntityProcessor(EntityNbtProcessable processor) {
+        ENTITY_PROCESSORS.add(processor);
+        LiteItemListFabric.LOGGER.info("Registered entity processor: {}", processor.getName());
+    }
+
+    public static void registerEntityProcessors(EntityNbtProcessable... processors) {
+        for (EntityNbtProcessable processor : processors) {
+            registerEntityProcessor(processor);
+        }
+    }
+
+    public static List<EntityNbtProcessable> getEntityProcessors() {
+        return Collections.unmodifiableList(ENTITY_PROCESSORS);
+    }
+
+    public static void clearEntityProcessors() {
+        ENTITY_PROCESSORS.clear();
+        LiteItemListFabric.LOGGER.info("Cleared all entity processors");
     }
 
     private static void processBlock(BlockStateInfo blockInfo, NbtCompound tileEntity, Map<Item, Integer> itemCountMap) {
         Block block = blockInfo.block;
-        ConditionalBlockProcessor processor = BLOCK_PROCESSORS.get(block);
-        if (processor != null) {
-            processor.process(blockInfo, tileEntity, itemCountMap);
-            return;
-        }
-        for (Map.Entry<TagKey<Block>, ConditionalBlockProcessor> entry : TAG_PROCESSORS.entrySet()) {
-            if (block.getDefaultState().isIn(entry.getKey())) {
-                entry.getValue().process(blockInfo, tileEntity, itemCountMap);
-                return;
-            }
-        }
-        // 含水?
-        if ("true".equals(blockInfo.properties.get("waterlogged"))) {
-            addItem(itemCountMap, block.asItem(), 1);
+
+        if("true".equals(blockInfo.properties.getOrDefault("waterlogged", "false"))) {
             addItem(itemCountMap, Items.WATER_BUCKET, 1);
-            return;
+        }
+
+        for (BlockNbtProcessable processor : BLOCK_PROCESSORS) {
+            if (processor.supports(block)) {
+                if (processor.process(blockInfo, tileEntity, itemCountMap)) {
+                    return;         // 处理成功，不再尝试其他处理器
+                }
+            }
         }
 
         Item item = block.asItem();
@@ -106,62 +98,26 @@ public class LitematicaReader {
         }
     }
 
-    private static void parseEntities(NbtList entitiesList, Map<Item, Integer> itemCountMap) {
-        if (entitiesList == null) return;
+    private static void processEntity(NbtCompound entityNbt, Map<Item, Integer> itemCountMap) {
+        String entityId = entityNbt.getString("id");
+        if (entityId == null || entityId.isEmpty()) return;
 
-        for (int i = 0; i < entitiesList.size(); i++) {
-            NbtCompound entity = entitiesList.getCompound(i);
-            String id = entity.getString("id");
-
-            if ("minecraft:item_frame".equals(id)) {
-                addItem(itemCountMap, Items.ITEM_FRAME, 1);
-                if (entity.contains("Item", NbtElement.COMPOUND_TYPE)) {
-                    NbtCompound itemNbt = entity.getCompound("Item");
-                    String itemId = itemNbt.getString("id");
-                    int count = itemNbt.getInt("count");
-                    if (itemId != null && !itemId.isEmpty()) {
-                        Item item = Registries.ITEM.get(Identifier.of(itemId));
-                        if (item != Items.AIR) {
-                            addItem(itemCountMap, item, count);
-                        }
-                    }
+        for (EntityNbtProcessable processor : ENTITY_PROCESSORS) {
+            if (processor.supports(entityId)) {
+                if (processor.process(entityNbt, itemCountMap)) {
+                    return;         // 处理成功，不再尝试其他处理器
                 }
-                continue;
-            }
-
-            if ("minecraft:glow_item_frame".equals(id)) {
-                addItem(itemCountMap, Items.GLOW_ITEM_FRAME, 1);
-                if (entity.contains("Item", NbtElement.COMPOUND_TYPE)) {
-                    NbtCompound itemNbt = entity.getCompound("Item");
-                    String itemId = itemNbt.getString("id");
-                    int count = itemNbt.getInt("count");
-                    if (itemId != null && !itemId.isEmpty()) {
-                        Item item = Registries.ITEM.get(Identifier.of(itemId)).asItem();
-                        if (item != Items.AIR) {
-                            addItem(itemCountMap, item, count);
-                        }
-                    }
-                }
-                continue;
-            }
-
-            if ("minecraft:painting".equals(id)) {
-                addItem(itemCountMap, Items.PAINTING, 1);
-                continue;
-            }
-
-            if ("minecraft:armor_stand".equals(id)) {
-                addItem(itemCountMap, Items.ARMOR_STAND, 1);
             }
         }
     }
 
-    private static boolean addItem(Map<Item, Integer> map, Item item, int amount) {
+    public static boolean addItem(Map<Item, Integer> map, Item item, int amount) {
         if (item == null || item == Items.AIR || amount <= 0) return false;
         map.put(item, map.getOrDefault(item, 0) + amount);
         return true;
     }
 
+    // .litematic文件解析
     public static void refreshFileList() {
         fileNameSuggestionName.clear();
         File syncDir = SYNCMATICA_PATH.toFile();
@@ -240,7 +196,6 @@ public class LitematicaReader {
         int bitsPerEntry = calculateBitsPerEntry(palette.size());
         int totalBlocks = sizeX * sizeY * sizeZ;
 
-        // 方块实体 (TileEntities)
         Map<BlockPos, NbtCompound> tileEntities = new HashMap<>();
         NbtList tileEntitiesList = region.getList("TileEntities", NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < tileEntitiesList.size(); i++) {
@@ -251,7 +206,6 @@ public class LitematicaReader {
             tileEntities.put(new BlockPos(x, y, z), te);
         }
 
-        // 遍历所有方块
         for (int index = 0; index < totalBlocks; index++) {
             int paletteIndex = getPaletteIndex(blockStates, index, bitsPerEntry);
             if (paletteIndex < 0 || paletteIndex >= palette.size()) continue;
@@ -268,9 +222,17 @@ public class LitematicaReader {
             processBlock(blockInfo, tileEntity, itemCountMap);
         }
 
-        // 实体 (Entities) - 物品展示框、画、盔甲架等
         NbtList entitiesList = region.getList("Entities", NbtElement.COMPOUND_TYPE);
         parseEntities(entitiesList, itemCountMap);
+    }
+
+    private static void parseEntities(NbtList entitiesList, Map<Item, Integer> itemCountMap) {
+        if (entitiesList == null) return;
+
+        for (int i = 0; i < entitiesList.size(); i++) {
+            NbtCompound entity = entitiesList.getCompound(i);
+            processEntity(entity, itemCountMap);
+        }
     }
 
     private static BlockStateInfo parseBlockState(NbtCompound blockStateNbt) {
@@ -303,8 +265,7 @@ public class LitematicaReader {
         return new BlockStateInfo(block, properties);
     }
 
-    private record BlockStateInfo(Block block, Map<String, String> properties) {
-    }
+    public record BlockStateInfo(Block block, Map<String, String> properties) {}
 
     private static int calculateBitsPerEntry(int paletteSize) {
         if (paletteSize <= 1) return 1;

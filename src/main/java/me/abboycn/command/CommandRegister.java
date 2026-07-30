@@ -16,7 +16,7 @@ public class CommandRegister {
         CommandRegistrationCallback.EVENT.register((d, r, e) -> registerMain(d,r));
     }
 
-    public static void registerMain(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess){
+    private static void registerMain(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess){
         dispatcher.register(CommandManager.literal("liteitemlist")
                 .then(CommandManager.literal("task")
                         .then(CommandManager.literal("new")
