@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import static me.abboycn.gui.TaskItemListScreenHandler.openTaskItemListMenu;
 
-public class TaskManagerScreenHandler extends LiteItemListMenu{
+public class TaskManagerScreenHandler extends AbstractLiteItemListMenu {
     private static final ScreenHandlerType<GenericContainerScreenHandler> MENU_TYPE = ScreenHandlerType.GENERIC_9X4;
 
     private static final int FUNCTION_AREA_END = 9;

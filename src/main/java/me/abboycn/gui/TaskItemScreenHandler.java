@@ -15,13 +15,12 @@ import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
 import static me.abboycn.gui.TaskItemListScreenHandler.openTaskItemListMenu;
 
-public class TaskItemScreenHandler extends LiteItemListMenu {
+public class TaskItemScreenHandler extends AbstractLiteItemListMenu {
     private static final ScreenHandlerType<GenericContainerScreenHandler> MENU_TYPE = ScreenHandlerType.GENERIC_9X1;
 
     private Map<Integer, TaskItemScreenHandler.FunctionType> slotToFuncMap;               // 功能区映射

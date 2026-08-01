@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public abstract class LiteItemListMenu extends ScreenHandler {
+public abstract class AbstractLiteItemListMenu extends ScreenHandler {
     protected int MENU_SIZE;
     protected int REFRESH_INTERVAL;
 
@@ -33,7 +33,7 @@ public abstract class LiteItemListMenu extends ScreenHandler {
         put(ScreenHandlerType.GENERIC_9X6, 54);
     }};
 
-    public LiteItemListMenu(int syncId, ScreenHandlerType handlerType, int REFRESH_INTERVAL, ServerPlayerEntity player) {
+    public AbstractLiteItemListMenu(int syncId, ScreenHandlerType handlerType, int REFRESH_INTERVAL, ServerPlayerEntity player) {
         super(handlerType,syncId);
         this.MENU_SIZE = handlerTypeToSize.get(handlerType);
         this.menuInventory = new SimpleInventory(MENU_SIZE);

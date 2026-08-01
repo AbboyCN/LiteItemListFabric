@@ -1,9 +1,8 @@
 {
 	"required": true,
-	"package": "me.abboycn.mixin",
+	"package": "me.abboycn",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -18,7 +18,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -26,7 +25,7 @@ import static me.abboycn.gui.TaskBotManagerScreenHandler.openTaskBotManagerMenu;
 import static me.abboycn.gui.TaskItemScreenHandler.openTaskItemMenu;
 import static me.abboycn.gui.TaskManagerScreenHandler.openTaskManagerMenu;
 
-public class TaskItemListScreenHandler extends LiteItemListMenu {
+public class TaskItemListScreenHandler extends AbstractLiteItemListMenu {
     public static final ScreenHandlerType<GenericContainerScreenHandler> MENU_TYPE = ScreenHandlerType.GENERIC_9X6;
 
     public static final int FUNCTION_AREA_END = 9;                  // 功能区截至
@@ -181,6 +180,7 @@ public class TaskItemListScreenHandler extends LiteItemListMenu {
 
             lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.count").copy().append(Text.literal((taskItem.isFinished()?Formatting.GREEN:taskItem.getAvailable()==0?Formatting.RED:Formatting.YELLOW) + "" + taskItem.getAvailable() + " / " + taskItem.getAmount())));
             if(!taskItem.isFinished()){
+                int maxStackCount = taskItem.getItem().getMaxCount();
                 int box = (taskItem.getAmount()-taskItem.getAvailable())/1728;
                 int stack = (taskItem.getAmount()-taskItem.getAvailable()-1728*box)/64;
                 int single = (taskItem.getAmount()-taskItem.getAvailable())%64;
