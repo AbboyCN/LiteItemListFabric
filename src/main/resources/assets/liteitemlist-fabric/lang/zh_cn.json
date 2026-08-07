@@ -2,6 +2,7 @@
   "msg.liteitemlist.bot.summon.failed.name_to_long": "§c创建假人失败: 名称过长!",
   "msg.liteitemlist.bot.summon.failed.summoning": "§c创建假人失败: 该假人正在创建!",
   "msg.liteitemlist.bot.summon.failed.timedout": "§c创建假人失败: 创建超时!(%s)",
+  "msg.liteitemlist.bot.remove.success": "§a已将假人\"%s\"从任务中移除.",
   "msg.liteitemlist.cmd.error.unknown_task": "§c未知的任务，请检查拼写或使用 \"/liteitemlist task list\" 查看任务列表!",
   "msg.liteitemlist.cmd.error.not_in_task": "§c你未参与此任务!",
   "msg.liteitemlist.cmd.error.has_in_task": "§c你已参与此任务了!",

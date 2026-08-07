@@ -193,9 +193,10 @@ public class TaskItemListScreenHandler extends AbstractLiteItemListMenu {
             lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.count").copy().append(Text.literal((taskItem.isFinished()?Formatting.GREEN:taskItem.getAvailable()==0?Formatting.RED:Formatting.YELLOW) + "" + taskItem.getAvailable() + " / " + taskItem.getAmount())));
             if(!taskItem.isFinished()){
                 int maxStackCount = taskItem.getItem().getMaxCount();
-                int box = (taskItem.getAmount()-taskItem.getAvailable())/1728;
-                int stack = (taskItem.getAmount()-taskItem.getAvailable()-1728*box)/64;
-                int single = (taskItem.getAmount()-taskItem.getAvailable())%64;
+                int need = taskItem.getAmount()-taskItem.getAvailable();
+                int single = need%maxStackCount;
+                int stack = ((need-single)/maxStackCount)%27;
+                int box = need/(maxStackCount*27);
                 lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.require").copy()
                         .append(box!=0?LangProvider.get("msg.liteitemlist.gui.universal.box",box):Text.literal(""))
                         .append(stack!=0?LangProvider.get("msg.liteitemlist.gui.universal.stack",stack):Text.literal(""))

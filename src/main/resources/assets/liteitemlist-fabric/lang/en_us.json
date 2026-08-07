@@ -2,6 +2,7 @@
   "msg.liteitemlist.bot.summon.failed.name_to_long": "§cFailed to summon storage bot:Name is too long!",
   "msg.liteitemlist.bot.summon.failed.summoning": "§cFailed to summon storage bot:The bot is summoning now!",
   "msg.liteitemlist.bot.summon.failed.timedout": "§cFailed to summon storage bot:Timed out!(%s)",
+  "msg.liteitemlist.bot.remove.success": "§aRemoved storage bot \"%s\" from the task.",
   "msg.liteitemlist.cmd.error.unknown_task": "§cUnknown task, please check your spelling or use \"/liteitemlist task list\" to check the task list!",
   "msg.liteitemlist.cmd.error.not_in_task": "§cYou are not participating in this task!",
   "msg.liteitemlist.cmd.error.has_in_task": "§cYou have already joined this task!",

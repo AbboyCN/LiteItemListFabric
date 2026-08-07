@@ -61,4 +61,8 @@ public class TaskStorageBotManager {
     public void summonAllBots(ServerPlayerEntity player){
         storageBots.forEach(bot -> bot.playerSummonFake(player));
     }
+
+    public void removeBot(int id){
+        storageBots.removeIf(b -> b.getId() == id);
+    }
 }
