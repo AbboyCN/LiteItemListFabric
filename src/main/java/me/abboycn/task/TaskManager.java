@@ -8,12 +8,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class TaskManager {
+    private static final int FILE_VERSION = 1;
     @SerializedName("tasks")
     private Collection<ItemListTask> m_tasks = new ArrayList<>();
     @SerializedName("nextId")
     private int nextId = 0;
+    @SerializedName("version")
+    private int fileVersion = FILE_VERSION;
 
     public TaskManager() {}
+
+    public int getFileVersion() {
+        return FILE_VERSION;
+    }
 
     public void setNextId(int nextId) {
         this.nextId = nextId;

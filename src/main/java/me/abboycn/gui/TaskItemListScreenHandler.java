@@ -20,6 +20,7 @@ import net.minecraft.util.Formatting;
 
 import java.util.*;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static me.abboycn.gui.TaskBotManagerScreenHandler.openTaskBotManagerMenu;
 import static me.abboycn.gui.TaskItemScreenHandler.openTaskItemMenu;
@@ -163,8 +164,19 @@ public class TaskItemListScreenHandler extends AbstractLiteItemListMenu {
     // 初始化物品展示区
     private void initTaskItemArea() {
         slotToTaskItemMap = new HashMap<>();
-        Collection<TaskItem_ItemStack> finished = new ArrayList<>();
-        Collection<TaskItem_ItemStack> unfinished = new ArrayList<>();
+        Collection<TaskItem_ItemStack> taskItem_itemStacks = new ArrayList<>();
+
+        Collection<TaskItem> finished = new ArrayList<>();
+        Collection<TaskItem> unfinished = new ArrayList<>();
+        for(TaskItem taskItem : upStageTaskItemList){
+            if(taskItem.isFinished()){
+                finished.add(taskItem);
+            }
+            else{
+                unfinished.add(taskItem);
+            }
+        }
+        upStageTaskItemList= Stream.concat(unfinished.stream(),finished.stream()).toList();
 
         if(currentPage*TASK_ITEM_AREA_SIZE>upStageTaskItemList.size()){
             currentPage=upStageTaskItemList.size()/TASK_ITEM_AREA_SIZE;
@@ -209,23 +221,11 @@ public class TaskItemListScreenHandler extends AbstractLiteItemListMenu {
                 displayStack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE,true);
             }
 
-            if(taskItem.isFinished()){
-                finished.add(new TaskItem_ItemStack(taskItem,displayStack));
-            }
-            else {
-                unfinished.add(new TaskItem_ItemStack(taskItem,displayStack));
-            }
+            taskItem_itemStacks.add(new TaskItem_ItemStack(taskItem,displayStack));
         }
 
         int slot = TASK_ITEM_START;
-        for(TaskItem_ItemStack taskItem_itemStack : unfinished) {
-            if(slot<MENU_SIZE){
-                slotToTaskItemMap.put(slot,taskItem_itemStack.taskItem);
-                menuInventory.setStack(slot,taskItem_itemStack.itemStack);
-                slot++;
-            }
-        }
-        for(TaskItem_ItemStack taskItem_itemStack : finished) {
+        for(TaskItem_ItemStack taskItem_itemStack : taskItem_itemStacks) {
             if(slot<MENU_SIZE){
                 slotToTaskItemMap.put(slot,taskItem_itemStack.taskItem);
                 menuInventory.setStack(slot,taskItem_itemStack.itemStack);
