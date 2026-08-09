@@ -185,10 +185,11 @@ public class TaskItemListScreenHandler extends AbstractLiteItemListMenu {
             TaskItem taskItem = upStageTaskItemList.stream().toList().get(i);
 
             ItemStack displayStack = new ItemStack(taskItem.getItem());
-            Text namePrefix = (taskItem.isImpt() ? LangProvider.get("gui.liteitemlist.itemlist.element.name.impt") : Text.literal("")).copy().append(taskItem.isHard() ? LangProvider.get("gui.liteitemlist.itemlist.element.name.hard") : Text.literal(""));
-            displayStack.set(DataComponentTypes.CUSTOM_NAME,namePrefix.copy().append(Text.literal(Formatting.WHITE + taskItem.getItem().getName().getString())));
 
             List<Text> lore = new ArrayList<>();
+
+            lore.add((taskItem.isImpt() ? LangProvider.get("gui.liteitemlist.itemlist.element.name.impt") : Text.literal(""))
+                    .copy().append(taskItem.isHard() ? LangProvider.get("gui.liteitemlist.itemlist.element.name.hard") : Text.literal("")));
 
             lore.add(LangProvider.get("gui.liteitemlist.itemlist.element.count").copy().append(Text.literal((taskItem.isFinished()?Formatting.GREEN:taskItem.getAvailable()==0?Formatting.RED:Formatting.YELLOW) + "" + taskItem.getAvailable() + " / " + taskItem.getAmount())));
             if(!taskItem.isFinished()){
