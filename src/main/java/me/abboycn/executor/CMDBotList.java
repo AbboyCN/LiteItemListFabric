@@ -20,7 +20,7 @@ public class CMDBotList {
         }
         player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.bot.list.summary", task.getStorageBotManager().getBots().size()));
         for(StorageBot bot : task.getStorageBotManager().getBots()){
-            int usedStorage = bot.getUsedStorage(context.getSource().getServer());
+            int usedStorage = bot.getUsedStorage();
             player.sendMessage(LangProvider.get("msg.liteitemlist.cmd.bot.list.bot_info", bot.getName(), String.valueOf(usedStorage==-1?"#NaN":usedStorage)));
         }
         return 1;

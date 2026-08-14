@@ -2,11 +2,9 @@ package me.abboycn.task;
 
 import com.google.gson.annotations.SerializedName;
 import me.abboycn.bot.StorageBot;
+import me.abboycn.bot.StorageBotInventory;
 import me.abboycn.bot.TaskStorageBotManager;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
@@ -15,7 +13,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class TaskItemList {
     @SerializedName("project")
@@ -27,7 +24,6 @@ public class TaskItemList {
     @SerializedName("taskItems")
     private Collection<TaskItem> taskItems;
 
-    // 空构造器（GSON反序列化需要）
     public TaskItemList() {
         this.taskItems = new ArrayList<>();
     }
@@ -122,19 +118,9 @@ public class TaskItemList {
         taskItems.forEach(taskItem -> taskItem.setAvailable(0));
         for(StorageBot bot : botManager.getBots()){
             bot.refreshInventory(server);
-            Inventory inventory = bot.getInventory();
+            StorageBotInventory inventory = bot.getInventory();
             for(TaskItem taskItem : taskItems) {
-                for(int i=0; i<inventory.size(); i++){
-                    if(inventory.getStack(i).getItem().equals(taskItem.getItem())){
-                        taskItem.addAvailable(inventory.getStack(i).getCount());
-                    }
-                    else if(inventory.getStack(i).contains(DataComponentTypes.CONTAINER)){
-                        taskItem.addAvailable(Objects.requireNonNull(inventory.getStack(i).get(DataComponentTypes.CONTAINER)).stream()
-                                .filter(innerStack -> innerStack.isOf(taskItem.getItem()))
-                                .mapToInt(ItemStack::getCount)
-                                .sum());
-                    }
-                }
+                taskItem.addAvailable(inventory.count(taskItem.getItem()));
             }
         }
     }

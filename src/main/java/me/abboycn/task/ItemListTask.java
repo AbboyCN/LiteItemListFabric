@@ -38,6 +38,8 @@ public class ItemListTask {
     private transient Timer storageRefreshTimer;
     private static final int REFRESH_INTERVAL = 3000;
 
+
+
     public ItemListTask(String name, int id, ServerPlayerEntity creator) {
         m_name = name;
         m_id = id;

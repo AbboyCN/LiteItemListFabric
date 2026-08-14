@@ -22,7 +22,7 @@ public class StorageBot {
     @SerializedName("name")
     private String m_name;
     @SerializedName("inventory")
-    private PlayerInventory m_inventory = new PlayerInventory(null);
+    private StorageBotInventory m_inventory = new StorageBotInventory();
 
     public StorageBot(String task, int id) {
         this.m_task = task;
@@ -42,7 +42,7 @@ public class StorageBot {
         return this.m_name;
     }
 
-    public PlayerInventory getInventory() {
+    public StorageBotInventory getInventory() {
         return this.m_inventory;
     }
 
@@ -58,13 +58,15 @@ public class StorageBot {
         this.m_name = name;
     }
 
+    public void setInventory(StorageBotInventory inventory) { this.m_inventory = inventory; }
+
     public void setInventory(PlayerInventory inventory) {
-        this.m_inventory = inventory;
+        this.m_inventory.syncFromInventory(inventory);
     }
 
     public boolean refreshInventory(MinecraftServer server) {
         if(!isOnline(server)) return false;
-        m_inventory = getPlayer(server).getInventory();
+        m_inventory.syncFromInventory(getPlayer(server).getInventory());
         return true;
     }
 
@@ -115,7 +117,7 @@ public class StorageBot {
                 if (asyncFake != null) {
                     ServerPlayerEntity finalAsyncFake = asyncFake;
                     server.execute(() -> {
-                        m_inventory = finalAsyncFake.getInventory();
+                        m_inventory.syncFromInventory(finalAsyncFake.getInventory());
                         finalAsyncFake.addCommandTag("storage_bot");
                     });
                     return;
@@ -125,16 +127,8 @@ public class StorageBot {
         }).start();
     }
 
-    public int getUsedStorage(MinecraftServer server) {
-        if(isOnline(server)&&!refreshInventory(server)) return -1;
-
-        int emptySlots = m_inventory.size();
-        for (int i = 0; i < m_inventory.size(); i++) {
-            if (m_inventory.getStack(i).isEmpty()) {
-                emptySlots--;
-            }
-        }
-        return emptySlots;
+    public int getUsedStorage() {
+        return m_inventory.getUsedSlots();
     }
 
     public ItemStack getHead(MinecraftServer server) {
@@ -146,8 +140,8 @@ public class StorageBot {
         return ret;
     }
 
-    public boolean isFull(MinecraftServer server) {
-        return getUsedStorage(server)>=41;
+    public boolean isFull() {
+        return m_inventory.isFull();
     }
 
     public boolean isOnline(MinecraftServer server) {
@@ -157,6 +151,4 @@ public class StorageBot {
     public ServerPlayerEntity getPlayer(MinecraftServer server) {
         return server.getPlayerManager().getPlayer(this.m_name);
     }
-
-
 }

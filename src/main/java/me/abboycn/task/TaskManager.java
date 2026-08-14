@@ -1,38 +1,41 @@
 package me.abboycn.task;
 
 import com.google.gson.annotations.SerializedName;
+import me.abboycn.data.DataVersion;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 public class TaskManager {
-    private static final int FILE_VERSION = 1;
     @SerializedName("tasks")
-    private Collection<ItemListTask> m_tasks = new ArrayList<>();
+    private List<ItemListTask> m_tasks;
+
     @SerializedName("nextId")
     private int nextId = 0;
+
     @SerializedName("version")
-    private int fileVersion = FILE_VERSION;
+    private int fileVersion = DataVersion.CURRENT_VERSION;
 
-    public TaskManager() {}
+    public TaskManager() {
+        this.m_tasks = new ArrayList<>();
+    }
 
-    public int getFileVersion() {
-        return FILE_VERSION;
+    public int getNextId() {
+        return nextId;
     }
 
     public void setNextId(int nextId) {
         this.nextId = nextId;
     }
 
+    public int getVersion() {
+        return fileVersion;
+    }
+
     public boolean checkTaskExist(String name) {
-        for (ItemListTask task : m_tasks) {
-            if (task.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
+        return m_tasks.stream().anyMatch(task -> task.getName().equals(name));
     }
 
     public ItemListTask newTask(String name, ServerPlayerEntity player) {
@@ -45,20 +48,30 @@ public class TaskManager {
         return task;
     }
 
-    public Collection<ItemListTask> getTasks() {
+    public List<ItemListTask> getTasks() {
         return m_tasks;
     }
 
     public ItemListTask getTask(String name) {
-        return m_tasks.stream().filter(task -> task.getName().equals(name)).findFirst().orElse(null);
+        return m_tasks.stream()
+                .filter(task -> task.getName().equals(name))
+                .findFirst()
+                .orElse(null);
     }
 
     public ItemListTask getTask(int id) {
-        return m_tasks.stream().filter(task -> task.getId() == id).findFirst().orElse(null);
+        return m_tasks.stream()
+                .filter(task -> task.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     public ItemListTask getTaskByPlayer(ServerPlayerEntity player) {
-        return m_tasks.stream().filter(task -> player.getCommandTags().contains(task.getTaskCommandTag())).findFirst().orElse(null);
+        if (player == null) return null;
+        return m_tasks.stream()
+                .filter(task -> player.getCommandTags().contains(task.getTaskCommandTag()))
+                .findFirst()
+                .orElse(null);
     }
 
     public String getTaskCommandTag(int id) {
@@ -66,11 +79,14 @@ public class TaskManager {
     }
 
     public String getTaskCommandTag(String name) {
-        return "in_task_" + getTask(name).getId();
+        ItemListTask task = getTask(name);
+        return task != null ? "in_task_" + task.getId() : null;
     }
 
     public void deleteTask(ItemListTask task) {
-        m_tasks.remove(task);
+        if (task != null) {
+            m_tasks.remove(task);
+        }
     }
 
     public void deleteTask(String name) {
@@ -78,10 +94,14 @@ public class TaskManager {
     }
 
     public void deleteTask(int id) {
-        m_tasks.remove(getTask(id));
+        ItemListTask task = getTask(id);
+        if (task != null) {
+            m_tasks.remove(task);
+        }
     }
 
-    public void startAutoRefreshAll(MinecraftServer server){
-        m_tasks.forEach(t -> t.startAutoRefreshStorage(server));
+    public void startAutoRefreshAll(MinecraftServer server) {
+        if (server == null) return;
+        m_tasks.forEach(task -> task.startAutoRefreshStorage(server));
     }
 }

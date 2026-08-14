@@ -1,6 +1,7 @@
 package me.abboycn.gui;
 
 import me.abboycn.bot.StorageBot;
+import me.abboycn.bot.StorageBotInventoryItem;
 import me.abboycn.resource.LangProvider;
 import me.abboycn.task.ItemListTask;
 import net.minecraft.component.DataComponentTypes;
@@ -153,13 +154,23 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
             StorageBot bot = upStageStorageBotList.stream().toList().get(i);
 
             ItemStack displayStack = bot.getHead(player.server);
-            displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal((bot.isFull(player.server)?Formatting.RED:Formatting.GREEN) + bot.getName()));
-            displayStack.set(DataComponentTypes.LORE, new LoreComponent(List.of(
-                    LangProvider.get("gui.liteitemlist.botmanager.element."+(bot.isOnline(player.server)?"online":"offline")),
-                    LangProvider.get("gui.liteitemlist.botmanager.element.space",bot.isFull(player.server)?"§c":"§a"+bot.getUsedStorage(player.server)),
-                    Text.empty(),
-                    LangProvider.get("gui.liteitemlist.universal.click").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.summon"))
-            )));
+            displayStack.set(DataComponentTypes.CUSTOM_NAME,Text.literal((bot.isFull()?Formatting.RED:Formatting.GREEN) + bot.getName()));
+
+            List<Text> lore = new ArrayList<>();
+            lore.add(LangProvider.get("gui.liteitemlist.botmanager.element."+(bot.isOnline(player.server)?"online":"offline")));
+            lore.add(LangProvider.get("gui.liteitemlist.botmanager.element.space",bot.isFull()?"§c":"§a"+bot.getUsedStorage()));
+            lore.add(Text.empty());
+            List<StorageBotInventoryItem> sortedInventory = bot.getInventory().getAbsoluteInventoryItemList().stream().sorted(Comparator.comparingInt(StorageBotInventoryItem::getCount).reversed()).limit(3).toList();
+            sortedInventory.forEach(item -> lore.add(Text.translatable(item.getItem().getTranslationKey()).formatted(Formatting.YELLOW).append(Text.literal(" x" + item.getCount()))));
+            if(bot.getInventory().size()>3){
+                lore.add(LangProvider.get("gui.liteitemlist.botmanager.element.inventory_omitted",bot.getInventory().size()));
+            }
+            lore.add(Text.empty());
+            lore.add(LangProvider.get("gui.liteitemlist.universal.click").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.summon")));
+            lore.add(LangProvider.get("gui.liteitemlist.universal.drop").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.remove")));
+
+
+            displayStack.set(DataComponentTypes.LORE, new LoreComponent(lore));
 
             ls.add(new StorageBot_ItemStack(bot, displayStack));
         }
@@ -192,8 +203,8 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
     private Collection<StorageBot> getFilteredListFromOriginal(ServerPlayerEntity player){
         Collection<StorageBot> ret = switch (filterTypeStorage){
             case DEFAULT -> originalStorageBotList;
-            case HASSPACE -> originalStorageBotList.stream().filter(s -> (!s.isFull(player.server))).toList();
-            case FULL ->  originalStorageBotList.stream().filter(s -> s.isFull(player.server)).toList();
+            case HASSPACE -> originalStorageBotList.stream().filter(s -> !s.isFull()).toList();
+            case FULL ->  originalStorageBotList.stream().filter(StorageBot::isFull).toList();
         };
         ret = switch (filterTypeOnline){
             case DEFAULT -> ret;
@@ -222,7 +233,7 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
             return;
         }
 
-        // 物品展示区
+        // 展示区
         StorageBot bot = slotToStorageBotMap.get(slotIndex);
         if (bot != null) {
             handleStorageBotClick(serverPlayer, bot, actionType);
@@ -305,7 +316,16 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
 
     // 处理物品展示区点击
     private void handleStorageBotClick(ServerPlayerEntity player, StorageBot bot, SlotActionType actionType) {
-        bot.playerSummonFake(player);
+        if(bot!=null){
+            if(actionType==SlotActionType.PICKUP){
+                bot.playerSummonFake(player);
+            }
+            else if(actionType==SlotActionType.THROW){
+                String name = bot.getName();
+                task.getStorageBotManager().removeBot(bot.getId());
+                player.sendMessage(LangProvider.get("msg.liteitemlist.bot.remove.success",name), true);
+            }
+        }
         refreshGui();
     }
 
