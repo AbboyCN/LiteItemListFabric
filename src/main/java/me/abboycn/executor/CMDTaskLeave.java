@@ -8,7 +8,7 @@ import me.abboycn.task.ItemListTask;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDTaskLeave {
+public final class CMDTaskLeave {
     public static int CMDTaskLeaveExecutor(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player == null) {

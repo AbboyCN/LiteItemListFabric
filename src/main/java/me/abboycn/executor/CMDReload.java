@@ -8,7 +8,7 @@ import me.abboycn.resource.LangProvider;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDReload {
+public final class CMDReload {
     public static int CMDReloadExecutor(CommandContext<ServerCommandSource> context){
         ServerPlayerEntity player = context.getSource().getPlayer();
         if(player==null) return 0;

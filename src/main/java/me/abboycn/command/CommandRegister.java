@@ -14,6 +14,7 @@ import static me.abboycn.executor.CMDTaskNew.CMDTaskNewExecutor;
 public class CommandRegister {
     public static void registerCommands() {
         CommandRegistrationCallback.EVENT.register((d, r, e) -> registerMain(d,r));
+        CommandRegistrationCallback.EVENT.register((d, r, e) -> registerConfig(d,r));
     }
 
     private static void registerMain(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess){
@@ -76,5 +77,26 @@ public class CommandRegister {
                                 .then(CommandManager.literal("en-us")
                                         .executes(s->CMDConfigLanguage.en_us()))))
         );
+    }
+
+    private static void registerConfig(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess) {
+        dispatcher.register(CommandManager.literal("liteitemlist")
+                .then(CommandManager.literal("config")
+                        .requires(s -> s.hasPermissionLevel(3))
+                        .executes(CMDConfig::printAllConfig)
+                        .then(CommandManager.literal("reload")
+                                .executes(CMDConfig::reloadConfig))
+                        .then(CommandManager.literal("reset")
+                                .executes(CMDConfig::resetAllConfig))
+                        .then(CommandManager.literal("language")
+                                .then(CommandManager.literal("zh-cn")
+                                        .executes(c -> CMDConfig.setLang(c, me.abboycn.resource.LangProvider.Lang.zh_cn)))
+                                .then(CommandManager.literal("en-us")
+                                        .executes(c -> CMDConfig.setLang(c, me.abboycn.resource.LangProvider.Lang.en_us)))
+                        )
+                        .then(CommandManager.literal("botsuffix")
+                                .then(CommandManager.argument("suffix", StringArgumentType.greedyString())
+                                        .executes(CMDConfig::setBotSuffix))
+                        )));
     }
 }

@@ -8,7 +8,7 @@ import me.abboycn.task.ItemListTask;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDTaskCancel {
+public final class CMDTaskCancel {
     public static int CMDTaskCancelExecutor(CommandContext<ServerCommandSource> context){
         ServerPlayerEntity player = context.getSource().getPlayer();
         if(player==null){return 0;}

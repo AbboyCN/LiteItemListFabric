@@ -11,7 +11,7 @@ import net.minecraft.server.command.ServerCommandSource;
 
 import java.util.concurrent.CompletableFuture;
 
-public class TABBotSuggester {
+public final class TABBotSuggester {
     public static CompletableFuture<Suggestions> botSuggester(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder){
         String input = builder.getRemainingLowerCase();
         ItemListTask task = LiteItemListFabric.taskManager.getTask(StringArgumentType.getString(context,"project"));

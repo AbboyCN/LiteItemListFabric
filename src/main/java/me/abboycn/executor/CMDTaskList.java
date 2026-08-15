@@ -7,7 +7,7 @@ import me.abboycn.task.ItemListTask;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDTaskList {
+public final class CMDTaskList {
     public static int CMDTaskListExecutor(CommandContext<ServerCommandSource> context) {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player == null) {

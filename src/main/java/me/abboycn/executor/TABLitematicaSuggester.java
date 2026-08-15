@@ -6,7 +6,7 @@ import me.abboycn.data.LitematicaReader;
 
 import java.util.concurrent.CompletableFuture;
 
-public class TABLitematicaSuggester {
+public final class TABLitematicaSuggester {
     public static CompletableFuture<Suggestions> litematicaFileSuggester(SuggestionsBuilder builder) {
         String input = builder.getRemainingLowerCase();
         if(input.isEmpty()) {

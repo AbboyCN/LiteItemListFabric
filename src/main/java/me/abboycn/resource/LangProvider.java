@@ -18,7 +18,7 @@ public class LangProvider {
 
     public enum Lang {
         zh_cn,
-        en_us
+        en_us,
     }
 
     public static void loadLanguage() {

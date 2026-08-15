@@ -1,5 +1,6 @@
 package me.abboycn;
 
+import me.abboycn.config.ConfigManager;
 import me.abboycn.data.DataPersistenceManager;
 import me.abboycn.data.nbtprocess.NbtProcessorRegister;
 import me.abboycn.event.*;
@@ -21,6 +22,7 @@ public class LiteItemListFabric implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LangProvider.loadLanguage();
+		ConfigManager.INSTANCE.loadConfig();
 		DataPersistenceManager.initDirectory();
 		NbtProcessorRegister.registerNbtProcessor();
 

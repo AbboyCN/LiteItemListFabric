@@ -7,7 +7,7 @@ import me.abboycn.task.ItemListTask;
 
 import java.util.concurrent.CompletableFuture;
 
-public class TABTaskSuggester {
+public final class TABTaskSuggester {
     public static CompletableFuture<Suggestions> projectSuggester(SuggestionsBuilder builder){
         String input = builder.getRemainingLowerCase();
         for(ItemListTask task : LiteItemListFabric.taskManager.getTasks()){

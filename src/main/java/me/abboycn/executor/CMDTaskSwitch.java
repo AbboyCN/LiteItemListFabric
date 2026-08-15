@@ -8,7 +8,7 @@ import me.abboycn.task.ItemListTask;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDTaskSwitch {
+public final class CMDTaskSwitch {
     public static int CMDTaskSwitchExecutor(CommandContext<ServerCommandSource> context){
         return executeOperation(context.getSource().getPlayer(), LiteItemListFabric.taskManager.getTask(StringArgumentType.getString(context, "project")));
     }

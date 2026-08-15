@@ -10,7 +10,7 @@ import me.abboycn.task.ItemListTask;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDBotSpawn {
+public final class CMDBotSpawn {
     public static int CMDBotSpawnExecutor(CommandContext<ServerCommandSource> context, boolean spawnAll) {
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player == null) {

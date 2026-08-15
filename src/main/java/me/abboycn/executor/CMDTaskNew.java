@@ -13,7 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import java.io.File;
 import java.nio.file.Paths;
 
-public class CMDTaskNew {
+public final class CMDTaskNew {
     public static int CMDTaskNewExecutor(CommandContext<ServerCommandSource> context, boolean loadFile){
         ServerPlayerEntity player = context.getSource().getPlayer();
         if(player==null) return 0;

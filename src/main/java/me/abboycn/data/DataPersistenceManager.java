@@ -1,4 +1,3 @@
-// me/abboycn/data/DataPersistenceManager.java
 package me.abboycn.data;
 
 import com.google.gson.*;
@@ -60,7 +59,6 @@ public class DataPersistenceManager {
     }
 
     public static void saveTasks(boolean printLog) {
-        // 检查是否成功加载了数据
         if (loadState != DataLoadState.SUCCESS) {
             LiteItemListFabric.LOGGER.warn("Data not loaded successfully, skipping save.");
             return;
@@ -130,7 +128,7 @@ public class DataPersistenceManager {
             }
 
             if (!DataVersion.isCurrent(version)) {
-                LiteItemListFabric.LOGGER.info("Migrating data from version {} to {} (support in future version!)", version, DataVersion.CURRENT_VERSION);
+                LiteItemListFabric.LOGGER.warn("Migrating data from version {} to {} (support in future version!)", version, DataVersion.CURRENT_VERSION);
             }
 
             TaskManager loaded = GSON.fromJson(jsonObject, TaskManager.class);

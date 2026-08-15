@@ -9,7 +9,7 @@ import me.abboycn.task.TaskItemList;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDList {
+public final class CMDList {
     public static int CMDListExecutor(CommandContext<ServerCommandSource> context){
         ServerPlayerEntity player = context.getSource().getPlayer();
         return showGUI(player);

@@ -10,7 +10,7 @@ import me.abboycn.task.ItemListTask;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class CMDBotRemove {
+public final class CMDBotRemove {
     public static int CMDBotRemoveExecutor(CommandContext<ServerCommandSource> context){
         ServerPlayerEntity player = context.getSource().getPlayer();
         if (player == null) {

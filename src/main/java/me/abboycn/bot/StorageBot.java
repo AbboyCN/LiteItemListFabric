@@ -1,6 +1,7 @@
 package me.abboycn.bot;
 
 import carpet.patches.EntityPlayerMPFake;
+import me.abboycn.config.ConfigManager;
 import me.abboycn.resource.LangProvider;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ProfileComponent;
@@ -27,7 +28,7 @@ public class StorageBot {
     public StorageBot(String task, int id) {
         this.m_task = task;
         this.m_id = (short) id;
-        this.m_name = m_task + "_" + Integer.toString(m_id);
+        this.m_name = m_task + "_" + Integer.toString(m_id) + ConfigManager.INSTANCE.getConfig().getBotNameSuffix();
     }
 
     public String getTask() {
