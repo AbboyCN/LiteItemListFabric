@@ -62,6 +62,14 @@ public class TaskStorageBotManager {
         storageBots.forEach(bot -> bot.playerSummonFake(player));
     }
 
+    public void despawnBot(int id, ServerPlayerEntity player){
+        getBot(id).despawn(player.server);
+    }
+
+    public void despawnAllBots(ServerPlayerEntity player){
+        storageBots.forEach(bot -> bot.despawn(player.server));
+    }
+
     public void removeBot(int id){
         storageBots.removeIf(b -> b.getId() == id);
     }

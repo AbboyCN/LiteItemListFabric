@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.world.GameMode;
 
 import java.util.Set;
@@ -126,6 +127,15 @@ public class StorageBot {
             }
             server.execute(() -> player.sendMessage(LangProvider.get("msg.liteitemlist.bot.summon.failed.timedout", fakeName)));
         }).start();
+    }
+
+    public boolean despawn(MinecraftServer server) {
+        ServerPlayerEntity botPlayer = getPlayer(server);
+        if (!(botPlayer instanceof EntityPlayerMPFake bot)) {
+            return false;
+        }
+        bot.kill(Text.literal("Despawn by task member."));
+        return true;
     }
 
     public int getUsedStorage() {

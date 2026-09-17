@@ -1,4 +1,3 @@
-// me/abboycn/data/LitematicaReader.java
 package me.abboycn.data;
 
 import com.google.common.collect.BiMap;

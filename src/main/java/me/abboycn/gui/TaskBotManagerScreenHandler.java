@@ -44,6 +44,7 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
         BACK,
         NEWBOT,
         SUMMONALL,
+        DESPAWNALL,
         FILTER_STORAGE,
         FILTER_ONLINE,
         NEXT_PAGE
@@ -103,7 +104,7 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
         menuInventory.setStack(2, newItem.getItemStack());
         slotToFuncMap.put(2, TaskBotManagerScreenHandler.FunctionType.NEWBOT);
 
-        // [2] 召唤全部
+        // [3] 召唤全部
         MenuFunctionItem summonItem = new MenuFunctionItem(Items.PANDA_SPAWN_EGG, LangProvider.get("gui.liteitemlist.botmanager.func.summonall"), List.of(
                 LangProvider.get("gui.liteitemlist.botmanager.func.summonall.hint"),
                 LangProvider.get("gui.liteitemlist.botmanager.func.summonall.warning1"),
@@ -111,6 +112,13 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
         ));
         menuInventory.setStack(3, summonItem.getItemStack());
         slotToFuncMap.put(3, TaskBotManagerScreenHandler.FunctionType.SUMMONALL);
+
+        // [4] 下线全部
+        MenuFunctionItem despawnItem = new MenuFunctionItem(Items.WITHER_SKELETON_SPAWN_EGG, LangProvider.get("gui.liteitemlist.botmanager.func.despawnall"), List.of(
+                LangProvider.get("gui.liteitemlist.botmanager.func.despawnall.hint")
+        ));
+        menuInventory.setStack(4, despawnItem.getItemStack());
+        slotToFuncMap.put(4, TaskBotManagerScreenHandler.FunctionType.DESPAWNALL);
 
         // [6] 筛选：已用空间
         MenuFunctionItem filterItem_Storage = new MenuFunctionItem(Items.HOPPER, LangProvider.get("gui.liteitemlist.botmanager.func.filter_space"), List.of(
@@ -158,7 +166,7 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
 
             List<Text> lore = new ArrayList<>();
             lore.add(LangProvider.get("gui.liteitemlist.botmanager.element."+(bot.isOnline(player.server)?"online":"offline")));
-            lore.add(LangProvider.get("gui.liteitemlist.botmanager.element.space",bot.isFull()?"§c":"§a"+bot.getUsedStorage()));
+            lore.add(LangProvider.get("gui.liteitemlist.botmanager.element.space",(bot.isFull()?"§c":"§a")+bot.getUsedStorage()));
             lore.add(Text.empty());
             List<StorageBotInventoryItem> sortedInventory = bot.getInventory().getAbsoluteInventoryItemList().stream().sorted(Comparator.comparingInt(StorageBotInventoryItem::getCount).reversed()).limit(3).toList();
             sortedInventory.forEach(item -> lore.add(Text.translatable(item.getItem().getTranslationKey()).formatted(Formatting.YELLOW).append(Text.literal(" x" + item.getCount()))));
@@ -166,7 +174,8 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
                 lore.add(LangProvider.get("gui.liteitemlist.botmanager.element.inventory_omitted",bot.getInventory().size()));
             }
             lore.add(Text.empty());
-            lore.add(LangProvider.get("gui.liteitemlist.universal.click").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.summon")));
+            lore.add(LangProvider.get("gui.liteitemlist.universal.lclick").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.summon")));
+            lore.add(LangProvider.get("gui.liteitemlist.universal.rclick").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.summon")));
             lore.add(LangProvider.get("gui.liteitemlist.universal.drop").copy().append(LangProvider.get("gui.liteitemlist.botmanager.element.operation.remove")));
 
 
@@ -236,7 +245,7 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
         // 展示区
         StorageBot bot = slotToStorageBotMap.get(slotIndex);
         if (bot != null) {
-            handleStorageBotClick(serverPlayer, bot, actionType);
+            handleStorageBotClick(serverPlayer, bot, actionType, button);
             initMenuSlots();
             sendContentUpdates();
         }
@@ -248,6 +257,7 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
             case BACK -> backToSuperMenu(player);                   // 返回上一级
             case NEWBOT -> newBot(player);                          // 新建假人
             case SUMMONALL -> spawnAll(player);                     // 召唤全部
+            case DESPAWNALL -> despawnAll(player);                  // 下线全部
             case FILTER_STORAGE -> filterStorage(player);           // 筛选存储空间
             case FILTER_ONLINE -> filterOnline(player);             // 筛选在线状态
             case NEXT_PAGE -> toNextPage(player);                   // 下一页
@@ -279,6 +289,12 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
     // 召唤全部
     private void spawnAll(ServerPlayerEntity player) {
         task.getStorageBotManager().summonAllBots(player);
+        executeAutoRefresh();
+    }
+
+    // 下线全部
+    private void despawnAll(ServerPlayerEntity player) {
+        task.getStorageBotManager().despawnAllBots(player);
         executeAutoRefresh();
     }
 
@@ -314,11 +330,16 @@ public class TaskBotManagerScreenHandler extends AbstractLiteItemListMenu {
         refreshGui();
     }
 
-    // 处理物品展示区点击
-    private void handleStorageBotClick(ServerPlayerEntity player, StorageBot bot, SlotActionType actionType) {
+    // 处理假人展示区点击
+    private void handleStorageBotClick(ServerPlayerEntity player, StorageBot bot, SlotActionType actionType, int button) {
         if(bot!=null){
             if(actionType==SlotActionType.PICKUP){
-                bot.playerSummonFake(player);
+                if(button==0){
+                    bot.playerSummonFake(player);
+                }
+                else{
+                    bot.despawn(player.server);
+                }
             }
             else if(actionType==SlotActionType.THROW){
                 String name = bot.getName();

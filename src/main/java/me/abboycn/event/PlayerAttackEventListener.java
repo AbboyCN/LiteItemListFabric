@@ -1,7 +1,7 @@
 package me.abboycn.event;
 
 import me.abboycn.LiteItemListFabric;
-import me.abboycn.executor.CMDList;
+import me.abboycn.executor.CMDGui;
 import me.abboycn.gui.TaskManagerScreenHandler;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.item.Items;
@@ -16,7 +16,7 @@ public class PlayerAttackEventListener {
                 TaskManagerScreenHandler.openTaskManagerMenu((ServerPlayerEntity) player);
             }
             else {
-                CMDList.showGUI((ServerPlayerEntity) player);
+                CMDGui.showGUI((ServerPlayerEntity) player);
             }
             return ActionResult.PASS;
         }));

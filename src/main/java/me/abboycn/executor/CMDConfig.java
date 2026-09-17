@@ -12,14 +12,14 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 public final class CMDConfig {
-    private static LiteItemListConfig cfg() {
+    private static LiteItemListConfig getConfig() {
         return ConfigManager.INSTANCE.getConfig();
     }
 
     public static int printAllConfig(CommandContext<ServerCommandSource> ctx) {
         ServerPlayerEntity p = ctx.getSource().getPlayer();
         if (p == null) return 0;
-        LiteItemListConfig config = cfg();
+        LiteItemListConfig config = getConfig();
         p.sendMessage(Text.literal("==== LiteItemList 全局配置 ===="));
         p.sendMessage(Text.literal(ConfigKey.LANGUAGE + "：" + config.getLanguage()));
         p.sendMessage(Text.literal(ConfigKey.BOT_NAME_SUFFIX + "：\"" + config.getBotNameSuffix() + "\""));
@@ -44,9 +44,9 @@ public final class CMDConfig {
 
     public static int resetAllConfig(CommandContext<ServerCommandSource> ctx) {
         ServerPlayerEntity player = ctx.getSource().getPlayer();
-        cfg().resetDefault();
+        getConfig().resetDefault();
         ConfigManager.INSTANCE.saveConfig();
-        LangProvider.setLang(cfg().getLanguage());
+        LangProvider.setLang(getConfig().getLanguage());
         if(player == null) {
             LiteItemListFabric.LOGGER.info(LangProvider.get("msg.liteitemlist.cmd.config.reset.success").getString());
         }
@@ -58,7 +58,7 @@ public final class CMDConfig {
 
     public static int setLang(CommandContext<ServerCommandSource> ctx, LangProvider.Lang lang) {
         ServerPlayerEntity player = ctx.getSource().getPlayer();
-        cfg().setLanguage(lang);
+        getConfig().setLanguage(lang);
         ConfigManager.INSTANCE.saveConfig();
         LangProvider.setLang(lang);
         if(player == null) {
@@ -73,7 +73,7 @@ public final class CMDConfig {
     public static int setBotSuffix(CommandContext<ServerCommandSource> ctx) {
         ServerPlayerEntity player = ctx.getSource().getPlayer();
         String suffix = StringArgumentType.getString(ctx, "suffix");
-        cfg().setBotNameSuffix(suffix);
+        getConfig().setBotNameSuffix(suffix);
         ConfigManager.INSTANCE.saveConfig();
         if(player == null) {
             LiteItemListFabric.LOGGER.info(LangProvider.get("msg.liteitemlist.cmd.config.set.success", ConfigKey.BOT_NAME_SUFFIX, suffix).getString());
